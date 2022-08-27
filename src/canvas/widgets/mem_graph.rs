@@ -29,7 +29,13 @@ impl Painter {
                 draw_loc,
             );
             let points = {
-                let mut size = 0;
+                let mut size = 1;
+                let swap_data: &[(f64, f64)] = &app_state.converted_data.swap_data;
+                if let Some(swap) = swap_data.last() {
+                    if swap.1 != 0.0 {
+                        size += 1; // add capacity for SWAP
+                    }
+                }
                 #[cfg(feature = "zfs")]
                 {
                     let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
@@ -39,8 +45,15 @@ impl Painter {
                         }
                     }
                 }
-
-                size += 2; // add capacity for RAM and SWP
+                #[cfg(feature = "gpu")]
+                {
+                    let gpu_data: &[(f64, f64)] = &app_state.converted_data.gpu_data;
+                    if let Some(gpu) = gpu_data.last() {
+                        if gpu.1 != 0.0 {
+                            size += 1; // add capacity for GPU
+                        }
+                    }
+                }
 
                 let mut points = Vec::with_capacity(size);
                 if let Some((label_percent, label_frac)) = &app_state.converted_data.mem_labels {
@@ -61,17 +74,21 @@ impl Painter {
                 }
                 #[cfg(feature = "zfs")]
                 if let Some((label_percent, label_frac)) = &app_state.converted_data.arc_labels {
-                    let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
-                    if let Some(arc) = arc_data.last() {
-                        if arc.1 != 0.0 {
-                            let arc_label = format!("ARC:{}{}", label_percent, label_frac);
-                            points.push(GraphData {
-                                points: &app_state.converted_data.arc_data,
-                                style: self.colours.arc_style,
-                                name: Some(arc_label.into()),
-                            });
-                        }
-                    }
+                    let arc_label = format!("ARC:{}{}", label_percent, label_frac);
+                    points.push(GraphData {
+                        points: &app_state.converted_data.arc_data,
+                        style: self.colours.arc_style,
+                        name: Some(arc_label.into()),
+                    });
+                }
+                #[cfg(feature = "gpu")]
+                if let Some((label_percent, label_frac)) = &app_state.converted_data.gpu_labels {
+                    let gpu_label = format!("GPU:{}{}", label_percent, label_frac);
+                    points.push(GraphData {
+                        points: &app_state.converted_data.gpu_data,
+                        style: self.colours.gpu_style,
+                        name: Some(gpu_label.into()),
+                    });
                 }
 
                 points

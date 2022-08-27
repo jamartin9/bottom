@@ -19,6 +19,8 @@ impl Painter {
     ) {
         let mem_data: &[(f64, f64)] = &app_state.converted_data.mem_data;
         let swap_data: &[(f64, f64)] = &app_state.converted_data.swap_data;
+        let mut swap_used = false;
+        let mut size = 0;
 
         let margined_loc = Layout::default()
             .constraints([Constraint::Percentage(100)])
@@ -35,11 +37,14 @@ impl Painter {
         }
 
         let ram_use_percentage = if let Some(mem) = mem_data.last() {
+            size += 1;
             mem.1
         } else {
             0.0
         };
         let swap_use_percentage = if let Some(swap) = swap_data.last() {
+            size += 1;
+            swap_used = true;
             swap.1
         } else {
             0.0
@@ -102,45 +107,108 @@ impl Painter {
             )
         };
 
-        let mem_text = vec![
-            Spans::from(Span::styled(mem_label, self.colours.ram_style)),
-            Spans::from(Span::styled(swap_label, self.colours.swap_style)),
-            #[cfg(feature = "zfs")]
-            {
-                let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
-                let arc_use_percentage = if let Some(arc) = arc_data.last() {
-                    arc.1
-                } else {
-                    0.0
-                };
-                let trimmed_arc_frac = if let Some((_label_percent, label_frac)) =
-                    &app_state.converted_data.arc_labels
-                {
+        #[cfg(feature = "zfs")]
+        let (arc_used, arc_label) = {
+            let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
+            let mut arc_used = false;
+            let arc_use_percentage = if let Some(arc) = arc_data.last() {
+                size += 1;
+                arc_used = true;
+                arc.1
+            } else {
+                0.0
+            };
+            let trimmed_arc_frac =
+                if let Some((_label_percent, label_frac)) = &app_state.converted_data.arc_labels {
                     label_frac.trim()
                 } else {
                     EMPTY_MEMORY_FRAC_STRING
                 };
-                let arc_bar_length = usize::from(draw_loc.width.saturating_sub(7))
-                    .saturating_sub(trimmed_arc_frac.len());
-                let num_bars_arc = calculate_basic_use_bars(arc_use_percentage, arc_bar_length);
-                let arc_label = if app_state.basic_mode_use_percent {
-                    format!(
-                        "ARC[{}{}{:3.0}%]",
-                        "|".repeat(num_bars_arc),
-                        " ".repeat(arc_bar_length - num_bars_arc + trimmed_arc_frac.len() - 4),
-                        arc_use_percentage.round()
-                    )
+            let arc_bar_length = usize::from(draw_loc.width.saturating_sub(7))
+                .saturating_sub(trimmed_arc_frac.len());
+            let num_bars_arc = calculate_basic_use_bars(arc_use_percentage, arc_bar_length);
+            let arc_label = if app_state.basic_mode_use_percent {
+                format!(
+                    "ARC[{}{}{:3.0}%]",
+                    "|".repeat(num_bars_arc),
+                    " ".repeat(arc_bar_length - num_bars_arc + trimmed_arc_frac.len() - 4),
+                    arc_use_percentage.round()
+                )
+            } else {
+                format!(
+                    "ARC[{}{}{}]",
+                    "|".repeat(num_bars_arc),
+                    " ".repeat(arc_bar_length - num_bars_arc),
+                    trimmed_arc_frac
+                )
+            };
+            (
+                arc_used,
+                Spans::from(Span::styled(arc_label, self.colours.arc_style)),
+            )
+        };
+
+        #[cfg(feature = "gpu")]
+        let (gpu_used, gpu_label) = {
+            let mut gpu_used = false;
+            let gpu_data: &[(f64, f64)] = &app_state.converted_data.gpu_data;
+            let gpu_use_percentage = if let Some(gpu) = gpu_data.last() {
+                size += 1;
+                gpu_used = true;
+                gpu.1
+            } else {
+                0.0
+            };
+            let trimmed_gpu_frac =
+                if let Some((_label_percent, label_frac)) = &app_state.converted_data.gpu_labels {
+                    label_frac.trim()
                 } else {
-                    format!(
-                        "ARC[{}{}{}]",
-                        "|".repeat(num_bars_arc),
-                        " ".repeat(arc_bar_length - num_bars_arc),
-                        trimmed_arc_frac
-                    )
+                    EMPTY_MEMORY_FRAC_STRING
                 };
-                Spans::from(Span::styled(arc_label, self.colours.arc_style))
-            },
-        ];
+            let gpu_bar_length = usize::from(draw_loc.width.saturating_sub(7))
+                .saturating_sub(trimmed_gpu_frac.len());
+            let num_bars_gpu = calculate_basic_use_bars(gpu_use_percentage, gpu_bar_length);
+            let gpu_label = if app_state.basic_mode_use_percent {
+                format!(
+                    "GPU[{}{}{:3.0}%]",
+                    "|".repeat(num_bars_gpu),
+                    " ".repeat(gpu_bar_length - num_bars_gpu + trimmed_gpu_frac.len() - 4),
+                    gpu_use_percentage.round()
+                )
+            } else {
+                format!(
+                    "GPU[{}{}{}]",
+                    "|".repeat(num_bars_gpu),
+                    " ".repeat(gpu_bar_length - num_bars_gpu),
+                    trimmed_gpu_frac
+                )
+            };
+            (
+                gpu_used,
+                Spans::from(Span::styled(gpu_label, self.colours.gpu_style)),
+            )
+        };
+
+        let mut mem_text = Vec::with_capacity(size);
+
+        mem_text.push(Spans::from(Span::styled(mem_label, self.colours.ram_style)));
+
+        if swap_used {
+            mem_text.push(Spans::from(Span::styled(
+                swap_label,
+                self.colours.swap_style,
+            )));
+        }
+
+        #[cfg(feature = "zfs")]
+        if arc_used {
+            mem_text.push(arc_label);
+        }
+
+        #[cfg(feature = "gpu")]
+        if gpu_used {
+            mem_text.push(gpu_label);
+        }
 
         f.render_widget(
             Paragraph::new(mem_text).block(Block::default()),

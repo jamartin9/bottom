@@ -502,7 +502,14 @@ impl Painter {
                     }
                 };
 
-                let mut mem_rows = 0;
+                let mut mem_rows = 1;
+
+                let swap_data: &[(f64, f64)] = &app_state.converted_data.swap_data;
+                if let Some(swap) = swap_data.last() {
+                    if swap.1 != 0.0 {
+                        mem_rows += 1; // add row for swap
+                    }
+                }
 
                 #[cfg(feature = "zfs")]
                 {
@@ -514,7 +521,15 @@ impl Painter {
                     }
                 }
 
-                mem_rows += 2; // add rows for SWAP and MEM
+                #[cfg(feature = "gpu")]
+                {
+                    let gpu_data: &[(f64, f64)] = &app_state.converted_data.gpu_data;
+                    if let Some(gpu) = gpu_data.last() {
+                        if gpu.1 != 0.0 {
+                            mem_rows += 1; // add row for gpu
+                        }
+                    }
+                }
 
                 let vertical_chunks = Layout::default()
                     .direction(Direction::Vertical)

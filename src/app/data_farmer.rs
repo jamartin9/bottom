@@ -43,6 +43,8 @@ pub struct TimedData {
     pub swap_data: Option<Value>,
     #[cfg(feature = "zfs")]
     pub arc_data: Option<Value>,
+    #[cfg(feature = "gpu")]
+    pub gpu_data: Option<Value>,
 }
 
 pub type StringPidMap = FxHashMap<String, Vec<Pid>>;
@@ -165,6 +167,8 @@ pub struct DataCollection {
     pub battery_harvest: Vec<batteries::BatteryHarvest>,
     #[cfg(feature = "zfs")]
     pub arc_harvest: memory::MemHarvest,
+    #[cfg(feature = "gpu")]
+    pub gpu_harvest: memory::MemHarvest,
 }
 
 impl Default for DataCollection {
@@ -188,6 +192,8 @@ impl Default for DataCollection {
             battery_harvest: Vec::default(),
             #[cfg(feature = "zfs")]
             arc_harvest: memory::MemHarvest::default(),
+            #[cfg(feature = "gpu")]
+            gpu_harvest: memory::MemHarvest::default(),
         }
     }
 }
@@ -211,6 +217,10 @@ impl DataCollection {
         #[cfg(feature = "zfs")]
         {
             self.arc_harvest = memory::MemHarvest::default();
+        }
+        #[cfg(feature = "gpu")]
+        {
+            self.gpu_harvest = memory::MemHarvest::default();
         }
     }
 
@@ -263,6 +273,14 @@ impl DataCollection {
                 self.eat_arc(arc, &mut new_entry);
             }
         }
+
+        #[cfg(feature = "gpu")]
+        {
+            if let Some(gpu) = harvested_data.gpu {
+                self.eat_gpu(gpu, &mut new_entry);
+            }
+        }
+
         // CPU
         if let Some(cpu) = harvested_data.cpu {
             self.eat_cpu(cpu, &mut new_entry);
@@ -446,8 +464,13 @@ impl DataCollection {
 
     #[cfg(feature = "zfs")]
     fn eat_arc(&mut self, arc: memory::MemHarvest, new_entry: &mut TimedData) {
-        // Arc
         new_entry.arc_data = arc.use_percent;
         self.arc_harvest = arc;
+    }
+
+    #[cfg(feature = "gpu")]
+    fn eat_gpu(&mut self, gpu: memory::MemHarvest, new_entry: &mut TimedData) {
+        new_entry.gpu_data = gpu.use_percent;
+        self.gpu_harvest = gpu;
     }
 }
