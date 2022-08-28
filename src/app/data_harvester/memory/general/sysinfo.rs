@@ -9,7 +9,7 @@ pub async fn get_mem_data(
     crate::utils::error::Result<Option<MemHarvest>>,
     crate::utils::error::Result<Option<MemHarvest>>,
     crate::utils::error::Result<Option<MemHarvest>>,
-    crate::utils::error::Result<Option<MemHarvest>>,
+    crate::utils::error::Result<Option<Vec<(String, MemHarvest)>>>,
 ) {
     use futures::join;
 
@@ -89,42 +89,48 @@ pub async fn get_arc_data() -> crate::utils::error::Result<Option<MemHarvest>> {
     }))
 }
 
-pub async fn get_gpu_data() -> crate::utils::error::Result<Option<MemHarvest>> {
+pub async fn get_gpu_data() -> crate::utils::error::Result<Option<Vec<(String, MemHarvest)>>> {
     #[cfg(not(feature = "nvidia"))]
-    let (mem_total_in_kib, mem_used_in_kib) = (0, 0);
+    {
+        Ok(None)
+    }
 
     #[cfg(feature = "nvidia")]
-    let (mem_total_in_kib, mem_used_in_kib) = {
+    {
         use crate::data_harvester::nvidia::NVML_DATA;
-        let mut mem_total = 0;
-        let mut mem_used = 0;
         if let Ok(nvml) = &*NVML_DATA {
             if let Ok(ngpu) = nvml.device_count() {
+                let mut results = Vec::with_capacity(ngpu as usize);
                 for i in 0..ngpu {
                     if let Ok(device) = nvml.device_by_index(i) {
-                        if let Ok(mem) = device.memory_info() {
-                            // add all devices memory in bytes
-                            mem_total += mem.total;
-                            mem_used += mem.used;
+                        if let (Ok(name), Ok(mem)) = (device.name(), device.memory_info()) {
+                            // add device memory in bytes
+                            let mem_total_in_kib = mem.total / 1024;
+                            let mem_used_in_kib = mem.used / 1024;
+                            results.push((
+                                name,
+                                MemHarvest {
+                                    mem_total_in_kib,
+                                    mem_used_in_kib,
+                                    use_percent: if mem_total_in_kib == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib as f64 / mem_total_in_kib as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
                         }
                     }
                 }
-                (mem_total / 1024, mem_used / 1024)
+                Ok(Some(results))
             } else {
-                (0, 0)
+                Ok(None)
             }
         } else {
-            (0, 0)
+            Ok(None)
         }
-    };
-
-    Ok(Some(MemHarvest {
-        mem_total_in_kib,
-        mem_used_in_kib,
-        use_percent: if mem_total_in_kib == 0 {
-            None
-        } else {
-            Some(mem_used_in_kib as f64 / mem_total_in_kib as f64 * 100.0)
-        },
-    }))
+    }
 }

@@ -44,7 +44,7 @@ pub struct TimedData {
     #[cfg(feature = "zfs")]
     pub arc_data: Option<Value>,
     #[cfg(feature = "gpu")]
-    pub gpu_data: Option<Value>,
+    pub gpu_data: Vec<Option<Value>>,
 }
 
 pub type StringPidMap = FxHashMap<String, Vec<Pid>>;
@@ -168,7 +168,7 @@ pub struct DataCollection {
     #[cfg(feature = "zfs")]
     pub arc_harvest: memory::MemHarvest,
     #[cfg(feature = "gpu")]
-    pub gpu_harvest: memory::MemHarvest,
+    pub gpu_harvest: Vec<(String, memory::MemHarvest)>,
 }
 
 impl Default for DataCollection {
@@ -193,7 +193,7 @@ impl Default for DataCollection {
             #[cfg(feature = "zfs")]
             arc_harvest: memory::MemHarvest::default(),
             #[cfg(feature = "gpu")]
-            gpu_harvest: memory::MemHarvest::default(),
+            gpu_harvest: Vec::default(),
         }
     }
 }
@@ -220,7 +220,7 @@ impl DataCollection {
         }
         #[cfg(feature = "gpu")]
         {
-            self.gpu_harvest = memory::MemHarvest::default();
+            self.gpu_harvest = Vec::default();
         }
     }
 
@@ -469,8 +469,13 @@ impl DataCollection {
     }
 
     #[cfg(feature = "gpu")]
-    fn eat_gpu(&mut self, gpu: memory::MemHarvest, new_entry: &mut TimedData) {
-        new_entry.gpu_data = gpu.use_percent;
-        self.gpu_harvest = gpu;
+    fn eat_gpu(&mut self, gpu: Vec<(String, memory::MemHarvest)>, new_entry: &mut TimedData) {
+        // Note this only pre-calculates the data points - the names will be
+        // within the local copy of gpu_harvest.  Since it's all sequential
+        // it probably doesn't matter anyways.
+        gpu.iter().for_each(|data| {
+            new_entry.gpu_data.push(data.1.use_percent);
+        });
+        self.gpu_harvest = gpu.to_vec();
     }
 }

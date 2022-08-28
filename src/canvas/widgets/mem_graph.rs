@@ -47,12 +47,7 @@ impl Painter {
                 }
                 #[cfg(feature = "gpu")]
                 {
-                    let gpu_data: &[(f64, f64)] = &app_state.converted_data.gpu_data;
-                    if let Some(gpu) = gpu_data.last() {
-                        if gpu.1 != 0.0 {
-                            size += 1; // add capacity for GPU
-                        }
-                    }
+                    size += app_state.converted_data.gpu_data.len(); // add row(s) for gpu
                 }
 
                 let mut points = Vec::with_capacity(size);
@@ -82,13 +77,33 @@ impl Painter {
                     });
                 }
                 #[cfg(feature = "gpu")]
-                if let Some((label_percent, label_frac)) = &app_state.converted_data.gpu_labels {
-                    let gpu_label = format!("GPU:{}{}", label_percent, label_frac);
-                    points.push(GraphData {
-                        points: &app_state.converted_data.gpu_data,
-                        style: self.colours.gpu_style,
-                        name: Some(gpu_label.into()),
-                    });
+                {
+                    if let Some(gpu_label) = &app_state.converted_data.gpu_labels {
+                        let mut color_index = 0;
+                        let gpu_styles = &self.colours.gpu_colour_styles;
+                        gpu_label.iter().enumerate().for_each(|(gpu_index, label)| {
+                            if let Some(point) = app_state.converted_data.gpu_data.get(gpu_index) {
+                                let gpu_label = format!("{}:{}{}", label.2, label.0, label.1);
+                                let style = {
+                                    if gpu_styles.is_empty() {
+                                        tui::style::Style::default()
+                                    } else if color_index >= gpu_styles.len() {
+                                        // cycle styles
+                                        color_index = 1;
+                                        gpu_styles[color_index - 1]
+                                    } else {
+                                        color_index += 1;
+                                        gpu_styles[color_index - 1]
+                                    }
+                                };
+                                points.push(GraphData {
+                                    points: point,
+                                    style,
+                                    name: Some(gpu_label.into()),
+                                });
+                            }
+                        });
+                    }
                 }
 
                 points

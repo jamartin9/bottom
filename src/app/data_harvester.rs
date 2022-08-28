@@ -46,7 +46,7 @@ pub struct Data {
     #[cfg(feature = "zfs")]
     pub arc: Option<memory::MemHarvest>,
     #[cfg(feature = "gpu")]
-    pub gpu: Option<memory::MemHarvest>,
+    pub gpu: Option<Vec<(String, memory::MemHarvest)>>,
 }
 
 impl Default for Data {

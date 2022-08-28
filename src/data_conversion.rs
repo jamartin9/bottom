@@ -90,12 +90,12 @@ pub struct ConvertedData {
     pub mem_labels: Option<(String, String)>,
     pub swap_labels: Option<(String, String)>,
     pub arc_labels: Option<(String, String)>,
-    pub gpu_labels: Option<(String, String)>,
+    pub gpu_labels: Option<Vec<(String, String, String)>>,
 
     pub mem_data: Vec<Point>, // TODO: Switch this and all data points over to a better data structure...
     pub swap_data: Vec<Point>,
     pub arc_data: Vec<Point>,
-    pub gpu_data: Vec<Point>,
+    pub gpu_data: Vec<Vec<Point>>,
     pub load_avg_data: [f32; 3],
     pub cpu_data: Vec<ConvertedCpuData>,
     pub battery_data: Vec<ConvertedBatteryData>,
@@ -726,7 +726,9 @@ pub fn convert_arc_data_points(current_data: &data_farmer::DataCollection) -> Ve
 }
 
 #[cfg(feature = "gpu")]
-pub fn convert_gpu_labels(current_data: &data_farmer::DataCollection) -> Option<(String, String)> {
+pub fn convert_gpu_labels(
+    current_data: &data_farmer::DataCollection,
+) -> Option<Vec<(String, String, String)>> {
     /// Returns the unit type and denominator for given total amount of memory in kibibytes.
     fn return_unit_and_denominator_for_mem_kib(mem_total_kib: u64) -> (&'static str, f64) {
         if mem_total_kib < 1024 {
@@ -744,34 +746,39 @@ pub fn convert_gpu_labels(current_data: &data_farmer::DataCollection) -> Option<
         }
     }
 
-    if current_data.gpu_harvest.mem_total_in_kib > 0 {
-        Some((
-            format!(
-                "{:3.0}%",
-                current_data.gpu_harvest.use_percent.unwrap_or(0.0)
-            ),
-            {
-                let (unit, denominator) = return_unit_and_denominator_for_mem_kib(
-                    current_data.gpu_harvest.mem_total_in_kib,
-                );
+    let mut results = Vec::with_capacity(current_data.gpu_harvest.len());
 
-                format!(
-                    "   {:.1}{}/{:.1}{}",
-                    current_data.gpu_harvest.mem_used_in_kib as f64 / denominator,
-                    unit,
-                    (current_data.gpu_harvest.mem_total_in_kib as f64 / denominator),
-                    unit
-                )
-            },
-        ))
+    current_data.gpu_harvest.iter().for_each(|gpu| {
+        if gpu.1.mem_total_in_kib > 0 {
+            results.push((
+                format!("{:3.0}%", gpu.1.use_percent.unwrap_or(0.0)),
+                {
+                    let (unit, denominator) =
+                        return_unit_and_denominator_for_mem_kib(gpu.1.mem_total_in_kib);
+
+                    format!(
+                        "   {:.1}{}/{:.1}{}",
+                        gpu.1.mem_used_in_kib as f64 / denominator,
+                        unit,
+                        (gpu.1.mem_total_in_kib as f64 / denominator),
+                        unit
+                    )
+                },
+                gpu.0.to_owned(),
+            ));
+        }
+    });
+
+    if !results.is_empty() {
+        Some(results)
     } else {
         None
     }
 }
 
 #[cfg(feature = "gpu")]
-pub fn convert_gpu_data_points(current_data: &data_farmer::DataCollection) -> Vec<Point> {
-    let mut result: Vec<Point> = Vec::new();
+pub fn convert_gpu_data_points(current_data: &data_farmer::DataCollection) -> Vec<Vec<Point>> {
+    let mut results: Vec<Vec<Point>> = Vec::with_capacity(current_data.gpu_harvest.len());
     let current_time = if let Some(frozen_instant) = current_data.frozen_instant {
         frozen_instant
     } else {
@@ -779,17 +786,24 @@ pub fn convert_gpu_data_points(current_data: &data_farmer::DataCollection) -> Ve
     };
 
     for (time, data) in &current_data.timed_data_vec {
-        if let Some(gpu_data) = data.gpu_data {
-            let time_from_start: f64 =
-                (current_time.duration_since(*time).as_millis() as f64).floor();
-            result.push((-time_from_start, gpu_data));
-            if *time == current_time {
-                break;
+        data.gpu_data.iter().enumerate().for_each(|(index, point)| {
+            if let Some(data_point) = point {
+                let time_from_start: f64 =
+                    (current_time.duration_since(*time).as_millis() as f64).floor();
+                // add point to the gpu(s) point vector via index
+                if let Some(point_vec) = results.get_mut(index) {
+                    point_vec.push((-time_from_start, *data_point));
+                } else {
+                    results.push(vec![(-time_from_start, *data_point)]);
+                }
             }
+        });
+        if *time == current_time {
+            break;
         }
     }
 
-    result
+    results
 }
 
 #[cfg(test)]
