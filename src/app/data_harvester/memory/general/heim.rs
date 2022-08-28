@@ -273,6 +273,29 @@ pub async fn get_gpu_data() -> crate::utils::error::Result<Option<Vec<(String, M
                             // add device memory in bytes
                             let mem_total_in_kib = mem.total / 1024;
                             let mem_used_in_kib = mem.used / 1024;
+                            // TODO REMOVE
+                            let name2 = name.clone();
+                            let mem_total_in_kib2 = mem_total_in_kib * 2;
+                            let mem_used_in_kib2 = mem_used_in_kib + 1024 * 2;
+                            let name3 = name.clone();
+                            let mem_total_in_kib3 = mem_total_in_kib * 3;
+                            let mem_used_in_kib3 = mem_used_in_kib + 1024 * 3;
+                            let name4 = name.clone();
+                            let mem_total_in_kib4 = mem_total_in_kib * 4;
+                            let mem_used_in_kib4 = mem_used_in_kib + 1024 * 4;
+                            let name5 = name.clone();
+                            let mem_total_in_kib5 = mem_total_in_kib * 5;
+                            let mem_used_in_kib5 = mem_used_in_kib + 1024 * 5;
+                            let name6 = name.clone();
+                            let mem_total_in_kib6 = mem_total_in_kib * 6;
+                            let mem_used_in_kib6 = mem_used_in_kib + 1024 * 6;
+                            let name7 = name.clone();
+                            let mem_total_in_kib7 = mem_total_in_kib * 7;
+                            let mem_used_in_kib7 = mem_used_in_kib + 1024 * 7;
+                            let name8 = name.clone();
+                            let mem_total_in_kib8 = mem_total_in_kib * 8;
+                            let mem_used_in_kib8 = mem_used_in_kib + 1024 * 8;
+                            // TODO REMOVE
                             results.push((
                                 name,
                                 MemHarvest {
@@ -288,6 +311,113 @@ pub async fn get_gpu_data() -> crate::utils::error::Result<Option<Vec<(String, M
                                     },
                                 },
                             ));
+                            // TODO REMOVE
+                            results.push((
+                                name2,
+                                MemHarvest {
+                                    mem_total_in_kib: mem_total_in_kib2,
+                                    mem_used_in_kib: mem_used_in_kib2,
+                                    use_percent: if mem_total_in_kib2 == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib2 as f64 / mem_total_in_kib2 as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
+                            results.push((
+                                name3,
+                                MemHarvest {
+                                    mem_total_in_kib: mem_total_in_kib3,
+                                    mem_used_in_kib: mem_used_in_kib3,
+                                    use_percent: if mem_total_in_kib3 == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib3 as f64 / mem_total_in_kib3 as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
+                            results.push((
+                                name4,
+                                MemHarvest {
+                                    mem_total_in_kib: mem_total_in_kib4,
+                                    mem_used_in_kib: mem_used_in_kib4,
+                                    use_percent: if mem_total_in_kib4 == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib4 as f64 / mem_total_in_kib4 as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
+                            results.push((
+                                name5,
+                                MemHarvest {
+                                    mem_total_in_kib: mem_total_in_kib5,
+                                    mem_used_in_kib: mem_used_in_kib5,
+                                    use_percent: if mem_total_in_kib5 == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib5 as f64 / mem_total_in_kib5 as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
+                            results.push((
+                                name6,
+                                MemHarvest {
+                                    mem_total_in_kib: mem_total_in_kib6,
+                                    mem_used_in_kib: mem_used_in_kib6,
+                                    use_percent: if mem_total_in_kib6 == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib6 as f64 / mem_total_in_kib6 as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
+                            results.push((
+                                name7,
+                                MemHarvest {
+                                    mem_total_in_kib: mem_total_in_kib7,
+                                    mem_used_in_kib: mem_used_in_kib7,
+                                    use_percent: if mem_total_in_kib7 == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib7 as f64 / mem_total_in_kib7 as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
+                            results.push((
+                                name8,
+                                MemHarvest {
+                                    mem_total_in_kib: mem_total_in_kib8,
+                                    mem_used_in_kib: mem_used_in_kib8,
+                                    use_percent: if mem_total_in_kib8 == 0 {
+                                        None
+                                    } else {
+                                        Some(
+                                            mem_used_in_kib8 as f64 / mem_total_in_kib8 as f64
+                                                * 100.0,
+                                        )
+                                    },
+                                },
+                            ));
+                            // TODO REMOVE
                         }
                     }
                 }
