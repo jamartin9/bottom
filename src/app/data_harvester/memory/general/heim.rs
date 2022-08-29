@@ -279,13 +279,13 @@ pub async fn get_gpu_data() -> crate::utils::error::Result<Option<Vec<(String, M
                             let mem_used_in_kib2 = mem_total_in_kib2 / 2;
                             let name3 = name.clone();
                             let mem_total_in_kib3 = mem_total_in_kib * 3;
-                            let mem_used_in_kib3 = mem_total_in_kib3 / 3 + 1024*1000;
+                            let mem_used_in_kib3 = mem_total_in_kib3 / 3 + 1024 * 1000;
                             let name4 = name.clone();
                             let mem_total_in_kib4 = mem_total_in_kib * 4;
-                            let mem_used_in_kib4 = mem_total_in_kib4 / 4 + 1024*750;
+                            let mem_used_in_kib4 = mem_total_in_kib4 / 4 + 1024 * 750;
                             let name5 = name.clone();
                             let mem_total_in_kib5 = mem_total_in_kib * 5;
-                            let mem_used_in_kib5 = mem_total_in_kib5 / 5 + 1024*500;
+                            let mem_used_in_kib5 = mem_total_in_kib5 / 5 + 1024 * 500;
                             let name6 = name.clone();
                             let mem_total_in_kib6 = mem_total_in_kib * 6;
                             let mem_used_in_kib6 = mem_total_in_kib6 / 15;
