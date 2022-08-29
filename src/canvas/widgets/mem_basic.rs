@@ -110,12 +110,12 @@ impl Painter {
         #[cfg(feature = "zfs")]
         let (arc_used, arc_label) = {
             let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
-            let mut arc_used = false;
             let arc_use_percentage = if let Some(arc) = arc_data.last() {
                 arc.1
             } else {
                 0.0
             };
+            let mut arc_used = false;
             let trimmed_arc_frac =
                 if let Some((_label_percent, label_frac)) = &app_state.converted_data.arc_labels {
                     size += 1;

@@ -30,19 +30,13 @@ impl Painter {
             );
             let points = {
                 let mut size = 1;
-                let swap_data: &[(f64, f64)] = &app_state.converted_data.swap_data;
-                if let Some(swap) = swap_data.last() {
-                    if swap.1 != 0.0 {
-                        size += 1; // add capacity for SWAP
-                    }
+                if app_state.converted_data.swap_labels.is_some() {
+                    size += 1; // add capacity for SWAP
                 }
                 #[cfg(feature = "zfs")]
                 {
-                    let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
-                    if let Some(arc) = arc_data.last() {
-                        if arc.1 != 0.0 {
-                            size += 1; // add capacity for ARC
-                        }
+                    if app_state.converted_data.arc_labels.is_some() {
+                        size += 1; // add capacity for ARC
                     }
                 }
                 #[cfg(feature = "gpu")]
@@ -71,17 +65,12 @@ impl Painter {
                 }
                 #[cfg(feature = "zfs")]
                 if let Some((label_percent, label_frac)) = &app_state.converted_data.arc_labels {
-                    let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
-                    if let Some(arc) = arc_data.last() {
-                        if arc.1 != 0.0 {
-                            let arc_label = format!("ARC:{}{}", label_percent, label_frac);
-                            points.push(GraphData {
-                                points: &app_state.converted_data.arc_data,
-                                style: self.colours.arc_style,
-                                name: Some(arc_label.into()),
-                            });
-                        }
-                    }
+                    let arc_label = format!("ARC:{}{}", label_percent, label_frac);
+                    points.push(GraphData {
+                        points: &app_state.converted_data.arc_data,
+                        style: self.colours.arc_style,
+                        name: Some(arc_label.into()),
+                    });
                 }
                 #[cfg(feature = "gpu")]
                 {
