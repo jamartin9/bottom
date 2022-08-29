@@ -167,7 +167,7 @@ impl Painter {
                     } else {
                         0.0
                     };
-                    let trimmed_gpu_frac = gpu_data_tuple.mem_percent.trim();
+                    let trimmed_gpu_frac = gpu_data_tuple.mem_total.trim();
                     let gpu_bar_length = usize::from(draw_loc.width.saturating_sub(7))
                         .saturating_sub(trimmed_gpu_frac.len());
                     let num_bars_gpu = calculate_basic_use_bars(gpu_use_percentage, gpu_bar_length);
