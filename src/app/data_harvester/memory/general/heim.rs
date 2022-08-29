@@ -276,25 +276,25 @@ pub async fn get_gpu_data() -> crate::utils::error::Result<Option<Vec<(String, M
                             // TODO REMOVE
                             let name2 = name.clone();
                             let mem_total_in_kib2 = mem_total_in_kib * 2;
-                            let mem_used_in_kib2 = mem_used_in_kib + 1024 * 2;
+                            let mem_used_in_kib2 = mem_total_in_kib2 / 2;
                             let name3 = name.clone();
                             let mem_total_in_kib3 = mem_total_in_kib * 3;
-                            let mem_used_in_kib3 = mem_used_in_kib + 1024 * 3;
+                            let mem_used_in_kib3 = mem_total_in_kib3 / 3 + 1024*1000;
                             let name4 = name.clone();
                             let mem_total_in_kib4 = mem_total_in_kib * 4;
-                            let mem_used_in_kib4 = mem_used_in_kib + 1024 * 4;
+                            let mem_used_in_kib4 = mem_total_in_kib4 / 4 + 1024*750;
                             let name5 = name.clone();
                             let mem_total_in_kib5 = mem_total_in_kib * 5;
-                            let mem_used_in_kib5 = mem_used_in_kib + 1024 * 5;
+                            let mem_used_in_kib5 = mem_total_in_kib5 / 5 + 1024*500;
                             let name6 = name.clone();
                             let mem_total_in_kib6 = mem_total_in_kib * 6;
-                            let mem_used_in_kib6 = mem_used_in_kib + 1024 * 6;
+                            let mem_used_in_kib6 = mem_total_in_kib6 / 15;
                             let name7 = name.clone();
                             let mem_total_in_kib7 = mem_total_in_kib * 7;
-                            let mem_used_in_kib7 = mem_used_in_kib + 1024 * 7;
+                            let mem_used_in_kib7 = mem_total_in_kib7 / 20;
                             let name8 = name.clone();
                             let mem_total_in_kib8 = mem_total_in_kib * 8;
-                            let mem_used_in_kib8 = mem_used_in_kib + 1024 * 8;
+                            let mem_used_in_kib8 = mem_total_in_kib8 / 10;
                             // TODO REMOVE
                             results.push((
                                 name,
