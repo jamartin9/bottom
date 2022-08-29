@@ -504,13 +504,13 @@ impl Painter {
 
                 let mut mem_rows = 1;
 
-                if let Some(_) = &app_state.converted_data.swap_labels {
+                if app_state.converted_data.swap_labels.is_some() {
                     mem_rows += 1; // add row for swap
                 }
 
                 #[cfg(feature = "zfs")]
                 {
-                    if let Some(_) = &app_state.converted_data.arc_labels {
+                    if app_state.converted_data.arc_labels.is_some() {
                         mem_rows += 1; // add row for arc
                     }
                 }
