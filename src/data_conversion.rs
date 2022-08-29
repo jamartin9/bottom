@@ -756,7 +756,6 @@ pub fn convert_gpu_data(
         }
     }
 
-    let mut results: Vec<ConvertedGpuData> = Vec::with_capacity(current_data.gpu_harvest.len());
     let current_time = if let Some(frozen_instant) = current_data.frozen_instant {
         frozen_instant
     } else {
@@ -786,39 +785,36 @@ pub fn convert_gpu_data(
     }
 
     // convert labels
-    current_data
+    let results = current_data
         .gpu_harvest
         .iter()
-        .enumerate()
-        .for_each(|(index, gpu)| {
-            if gpu.1.mem_total_in_kib > 0 {
-                if let Some(points) = point_vec.get(index) {
-                    let short_name = {
-                        let last_words = gpu.0.split_whitespace().rev().take(2).collect::<Vec<_>>();
-                        let short_name = format!("{} {}", last_words[1], last_words[0]);
-                        short_name
-                    };
+        .zip(point_vec.iter())
+        .map(|(gpu, points)| {
+            let short_name = {
+                let last_words = gpu.0.split_whitespace().rev().take(2).collect::<Vec<_>>();
+                let short_name = format!("{} {}", last_words[1], last_words[0]);
+                short_name
+            };
 
-                    results.push(ConvertedGpuData {
-                        name: short_name,
-                        points: points.to_owned(),
-                        mem_percent: format!("{:3.0}%", gpu.1.use_percent.unwrap_or(0.0)),
-                        mem_total: {
-                            let (unit, denominator) =
-                                return_unit_and_denominator_for_mem_kib(gpu.1.mem_total_in_kib);
+            ConvertedGpuData {
+                name: short_name,
+                points: points.to_owned(),
+                mem_percent: format!("{:3.0}%", gpu.1.use_percent.unwrap_or(0.0)),
+                mem_total: {
+                    let (unit, denominator) =
+                        return_unit_and_denominator_for_mem_kib(gpu.1.mem_total_in_kib);
 
-                            format!(
-                                "   {:.1}{}/{:.1}{}",
-                                gpu.1.mem_used_in_kib as f64 / denominator,
-                                unit,
-                                (gpu.1.mem_total_in_kib as f64 / denominator),
-                                unit
-                            )
-                        },
-                    });
-                }
+                    format!(
+                        "   {:.1}{}/{:.1}{}",
+                        gpu.1.mem_used_in_kib as f64 / denominator,
+                        unit,
+                        (gpu.1.mem_total_in_kib as f64 / denominator),
+                        unit
+                    )
+                },
             }
-        });
+        })
+        .collect::<Vec<ConvertedGpuData>>();
 
     if !results.is_empty() {
         Some(results)

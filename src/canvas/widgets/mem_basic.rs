@@ -224,9 +224,9 @@ impl Painter {
 
         #[cfg(feature = "gpu")]
         if gpu_used {
-            gpu_labels.iter().for_each(|gpu_label| {
-                mem_text.push(gpu_label.to_owned());
-            });
+            for item in gpu_labels {
+                mem_text.push(item);
+            }
         }
 
         f.render_widget(
