@@ -84,7 +84,8 @@ impl Painter {
                         let mut color_index = 0;
                         let gpu_styles = &self.colours.gpu_colour_styles;
                         gpu_data.iter().for_each(|gpu| {
-                            let gpu_label = format!("{}:{}{}", gpu.name, gpu.mem_percent, gpu.mem_total);
+                            let gpu_label =
+                                format!("{}:{}{}", gpu.name, gpu.mem_percent, gpu.mem_total);
                             let style = {
                                 if gpu_styles.is_empty() {
                                     tui::style::Style::default()

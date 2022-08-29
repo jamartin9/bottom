@@ -756,8 +756,7 @@ pub fn convert_gpu_data(
         }
     }
 
-    let mut results: Vec<ConvertedGpuData> =
-        Vec::with_capacity(current_data.gpu_harvest.len());
+    let mut results: Vec<ConvertedGpuData> = Vec::with_capacity(current_data.gpu_harvest.len());
     let current_time = if let Some(frozen_instant) = current_data.frozen_instant {
         frozen_instant
     } else {
