@@ -504,20 +504,14 @@ impl Painter {
 
                 let mut mem_rows = 1;
 
-                let swap_data: &[(f64, f64)] = &app_state.converted_data.swap_data;
-                if let Some(swap) = swap_data.last() {
-                    if swap.1 != 0.0 {
-                        mem_rows += 1; // add row for swap
-                    }
+                if let Some(_) = &app_state.converted_data.swap_labels {
+                    mem_rows += 1; // add row for swap
                 }
 
                 #[cfg(feature = "zfs")]
                 {
-                    let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
-                    if let Some(arc) = arc_data.last() {
-                        if arc.1 != 0.0 {
-                            mem_rows += 1; // add row for arc
-                        }
+                    if let Some(_) = &app_state.converted_data.arc_labels {
+                        mem_rows += 1; // add row for arc
                     }
                 }
 
