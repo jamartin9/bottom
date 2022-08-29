@@ -62,17 +62,12 @@ impl Painter {
                     });
                 }
                 if let Some((label_percent, label_frac)) = &app_state.converted_data.swap_labels {
-                    let swap_data: &[(f64, f64)] = &app_state.converted_data.swap_data;
-                    if let Some(swap) = swap_data.last() {
-                        if swap.1 != 0.0 {
-                            let swap_label = format!("SWP:{}{}", label_percent, label_frac);
-                            points.push(GraphData {
-                                points: &app_state.converted_data.swap_data,
-                                style: self.colours.swap_style,
-                                name: Some(swap_label.into()),
-                            });
-                        }
-                    }
+                    let swap_label = format!("SWP:{}{}", label_percent, label_frac);
+                    points.push(GraphData {
+                        points: &app_state.converted_data.swap_data,
+                        style: self.colours.swap_style,
+                        name: Some(swap_label.into()),
+                    });
                 }
                 #[cfg(feature = "zfs")]
                 if let Some((label_percent, label_frac)) = &app_state.converted_data.arc_labels {

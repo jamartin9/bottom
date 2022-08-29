@@ -43,8 +43,6 @@ impl Painter {
             0.0
         };
         let swap_use_percentage = if let Some(swap) = swap_data.last() {
-            size += 1;
-            swap_used = true;
             swap.1
         } else {
             0.0
@@ -61,6 +59,8 @@ impl Painter {
 
         let trimmed_swap_frac =
             if let Some((_label_percent, label_frac)) = &app_state.converted_data.swap_labels {
+                size += 1;
+                swap_used = true;
                 label_frac.trim()
             } else {
                 EMPTY_MEMORY_FRAC_STRING
@@ -112,14 +112,14 @@ impl Painter {
             let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
             let mut arc_used = false;
             let arc_use_percentage = if let Some(arc) = arc_data.last() {
-                size += 1;
-                arc_used = true;
                 arc.1
             } else {
                 0.0
             };
             let trimmed_arc_frac =
                 if let Some((_label_percent, label_frac)) = &app_state.converted_data.arc_labels {
+                    size += 1;
+                    arc_used = true;
                     label_frac.trim()
                 } else {
                     EMPTY_MEMORY_FRAC_STRING
@@ -158,16 +158,16 @@ impl Painter {
             let gpu_styles = &self.colours.gpu_colour_styles;
             let mut color_index = 0;
             if let Some(gpu_data) = &app_state.converted_data.gpu_data {
-                gpu_data.iter().for_each(|gpu_data_tuple| {
-                    let gpu_data: &[(f64, f64)] = gpu_data_tuple.points.as_slice();
+                gpu_data.iter().for_each(|gpu_data_vec| {
+                    size += 1;
+                    gpu_used = true;
+                    let gpu_data: &[(f64, f64)] = gpu_data_vec.points.as_slice();
                     let gpu_use_percentage = if let Some(gpu) = gpu_data.last() {
-                        size += 1;
-                        gpu_used = true;
                         gpu.1
                     } else {
                         0.0
                     };
-                    let trimmed_gpu_frac = gpu_data_tuple.mem_total.trim();
+                    let trimmed_gpu_frac = gpu_data_vec.mem_total.trim();
                     let gpu_bar_length = usize::from(draw_loc.width.saturating_sub(7))
                         .saturating_sub(trimmed_gpu_frac.len());
                     let num_bars_gpu = calculate_basic_use_bars(gpu_use_percentage, gpu_bar_length);
