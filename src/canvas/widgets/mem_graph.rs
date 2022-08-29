@@ -71,12 +71,17 @@ impl Painter {
                 }
                 #[cfg(feature = "zfs")]
                 if let Some((label_percent, label_frac)) = &app_state.converted_data.arc_labels {
-                    let arc_label = format!("ARC:{}{}", label_percent, label_frac);
-                    points.push(GraphData {
-                        points: &app_state.converted_data.arc_data,
-                        style: self.colours.arc_style,
-                        name: Some(arc_label.into()),
-                    });
+                    let arc_data: &[(f64, f64)] = &app_state.converted_data.arc_data;
+                    if let Some(arc) = arc_data.last() {
+                        if arc.1 != 0.0 {
+                            let arc_label = format!("ARC:{}{}", label_percent, label_frac);
+                            points.push(GraphData {
+                                points: &app_state.converted_data.arc_data,
+                                style: self.colours.arc_style,
+                                name: Some(arc_label.into()),
+                            });
+                        }
+                    }
                 }
                 #[cfg(feature = "gpu")]
                 {
