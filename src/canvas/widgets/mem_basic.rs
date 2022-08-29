@@ -151,16 +151,15 @@ impl Painter {
         #[cfg(feature = "gpu")]
         let (gpu_used, gpu_labels) = {
             let mut gpu_used = false;
-            let mut gpu_labels = Vec::with_capacity(app_state.converted_data.gpu_data.len());
+            let mut gpu_labels = match &app_state.converted_data.gpu_data {
+                Some(data) => Vec::with_capacity(data.len()),
+                None => Vec::with_capacity(0),
+            };
             let gpu_styles = &self.colours.gpu_colour_styles;
             let mut color_index = 0;
-            app_state
-                .converted_data
-                .gpu_data
-                .iter()
-                .enumerate()
-                .for_each(|(gpu_index, gpu_data_vec)| {
-                    let gpu_data: &[(f64, f64)] = gpu_data_vec;
+            if let Some(gpu_data) = &app_state.converted_data.gpu_data {
+                gpu_data.iter().for_each(|gpu_data_tuple| {
+                    let gpu_data: &[(f64, f64)] = gpu_data_tuple.points.as_slice();
                     let gpu_use_percentage = if let Some(gpu) = gpu_data.last() {
                         size += 1;
                         gpu_used = true;
@@ -168,52 +167,43 @@ impl Painter {
                     } else {
                         0.0
                     };
-                    if let Some(label_vec) = &app_state.converted_data.gpu_labels {
-                        let trimmed_gpu_frac =
-                            if let Some((_label_percent, label_frac, _label_name)) =
-                                label_vec.get(gpu_index)
-                            {
-                                label_frac.trim()
-                            } else {
-                                EMPTY_MEMORY_FRAC_STRING
-                            };
-                        let gpu_bar_length = usize::from(draw_loc.width.saturating_sub(7))
-                            .saturating_sub(trimmed_gpu_frac.len());
-                        let num_bars_gpu =
-                            calculate_basic_use_bars(gpu_use_percentage, gpu_bar_length);
-                        let gpu_label = if app_state.basic_mode_use_percent {
-                            format!(
-                                "GPU[{}{}{:3.0}%]",
-                                "|".repeat(num_bars_gpu),
-                                " ".repeat(
-                                    gpu_bar_length - num_bars_gpu + trimmed_gpu_frac.len() - 4
-                                ),
-                                gpu_use_percentage.round()
-                            )
+                    let trimmed_gpu_frac = gpu_data_tuple.mem_percent.trim();
+                    let gpu_bar_length = usize::from(draw_loc.width.saturating_sub(7))
+                        .saturating_sub(trimmed_gpu_frac.len());
+                    let num_bars_gpu = calculate_basic_use_bars(gpu_use_percentage, gpu_bar_length);
+                    let gpu_label = if app_state.basic_mode_use_percent {
+                        format!(
+                            "GPU[{}{}{:3.0}%]",
+                            "|".repeat(num_bars_gpu),
+                            " ".repeat(gpu_bar_length - num_bars_gpu + trimmed_gpu_frac.len() - 4),
+                            gpu_use_percentage.round()
+                        )
+                    } else {
+                        format!(
+                            "GPU[{}{}{}]",
+                            "|".repeat(num_bars_gpu),
+                            " ".repeat(gpu_bar_length - num_bars_gpu),
+                            trimmed_gpu_frac
+                        )
+                    };
+                    let style = {
+                        if gpu_styles.is_empty() {
+                            tui::style::Style::default()
+                        } else if color_index >= gpu_styles.len() {
+                            // cycle styles
+                            color_index = 1;
+                            gpu_styles[color_index - 1]
                         } else {
-                            format!(
-                                "GPU[{}{}{}]",
-                                "|".repeat(num_bars_gpu),
-                                " ".repeat(gpu_bar_length - num_bars_gpu),
-                                trimmed_gpu_frac
-                            )
-                        };
-                        let style = {
-                            if gpu_styles.is_empty() {
-                                tui::style::Style::default()
-                            } else if color_index >= gpu_styles.len() {
-                                // cycle styles
-                                color_index = 1;
-                                gpu_styles[color_index - 1]
-                            } else {
-                                color_index += 1;
-                                gpu_styles[color_index - 1]
-                            }
-                        };
-                        gpu_labels.push(Spans::from(Span::styled(gpu_label, style)));
-                    }
+                            color_index += 1;
+                            gpu_styles[color_index - 1]
+                        }
+                    };
+                    gpu_labels.push(Spans::from(Span::styled(gpu_label, style)));
                 });
-            (gpu_used, gpu_labels)
+                (gpu_used, gpu_labels)
+            } else {
+                (false, vec![])
+            }
         };
 
         let mut mem_text = Vec::with_capacity(size);

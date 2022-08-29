@@ -47,7 +47,9 @@ impl Painter {
                 }
                 #[cfg(feature = "gpu")]
                 {
-                    size += app_state.converted_data.gpu_data.len(); // add row(s) for gpu
+                    if let Some(gpu_data) = &app_state.converted_data.gpu_data {
+                        size += gpu_data.len(); // add row(s) for gpu
+                    }
                 }
 
                 let mut points = Vec::with_capacity(size);
@@ -78,30 +80,28 @@ impl Painter {
                 }
                 #[cfg(feature = "gpu")]
                 {
-                    if let Some(gpu_label) = &app_state.converted_data.gpu_labels {
+                    if let Some(gpu_data) = &app_state.converted_data.gpu_data {
                         let mut color_index = 0;
                         let gpu_styles = &self.colours.gpu_colour_styles;
-                        gpu_label.iter().enumerate().for_each(|(gpu_index, label)| {
-                            if let Some(point) = app_state.converted_data.gpu_data.get(gpu_index) {
-                                let gpu_label = format!("{}:{}{}", label.2, label.0, label.1);
-                                let style = {
-                                    if gpu_styles.is_empty() {
-                                        tui::style::Style::default()
-                                    } else if color_index >= gpu_styles.len() {
-                                        // cycle styles
-                                        color_index = 1;
-                                        gpu_styles[color_index - 1]
-                                    } else {
-                                        color_index += 1;
-                                        gpu_styles[color_index - 1]
-                                    }
-                                };
-                                points.push(GraphData {
-                                    points: point,
-                                    style,
-                                    name: Some(gpu_label.into()),
-                                });
-                            }
+                        gpu_data.iter().for_each(|gpu| {
+                            let gpu_label = format!("{}:{}{}", gpu.name, gpu.mem_percent, gpu.mem_total);
+                            let style = {
+                                if gpu_styles.is_empty() {
+                                    tui::style::Style::default()
+                                } else if color_index >= gpu_styles.len() {
+                                    // cycle styles
+                                    color_index = 1;
+                                    gpu_styles[color_index - 1]
+                                } else {
+                                    color_index += 1;
+                                    gpu_styles[color_index - 1]
+                                }
+                            };
+                            points.push(GraphData {
+                                points: gpu.points.as_slice(),
+                                style,
+                                name: Some(gpu_label.into()),
+                            });
                         });
                     }
                 }

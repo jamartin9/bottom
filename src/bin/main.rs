@@ -199,7 +199,7 @@ fn main() -> Result<()> {
                             #[cfg(feature = "gpu")]
                             {
                                 app.converted_data.gpu_data =
-                                    convert_gpu_data_points(&app.data_collection);
+                                    convert_gpu_data(&app.data_collection);
                             }
                             let (memory_labels, swap_labels) =
                                 convert_mem_labels(&app.data_collection);
@@ -210,11 +210,6 @@ fn main() -> Result<()> {
                             {
                                 let arc_labels = convert_arc_labels(&app.data_collection);
                                 app.converted_data.arc_labels = arc_labels;
-                            }
-                            #[cfg(feature = "gpu")]
-                            {
-                                let gpu_labels = convert_gpu_labels(&app.data_collection);
-                                app.converted_data.gpu_labels = gpu_labels;
                             }
                         }
 

@@ -345,7 +345,7 @@ pub fn update_data(app: &mut App) {
         }
         #[cfg(feature = "gpu")]
         {
-            app.converted_data.gpu_data = convert_gpu_data_points(&app.data_collection);
+            app.converted_data.gpu_data = convert_gpu_data(&app.data_collection);
         }
         app.mem_state.force_update = None;
     }

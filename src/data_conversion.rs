@@ -89,16 +89,17 @@ pub struct ConvertedData {
 
     pub mem_labels: Option<(String, String)>,
     pub swap_labels: Option<(String, String)>,
+    #[cfg(feature = "zfs")]
     pub arc_labels: Option<(String, String)>,
-    pub gpu_labels: Option<Vec<(String, String, String)>>,
-
     pub mem_data: Vec<Point>, // TODO: Switch this and all data points over to a better data structure...
     pub swap_data: Vec<Point>,
+    #[cfg(feature = "zfs")]
     pub arc_data: Vec<Point>,
-    pub gpu_data: Vec<Vec<Point>>,
     pub load_avg_data: [f32; 3],
     pub cpu_data: Vec<ConvertedCpuData>,
     pub battery_data: Vec<ConvertedBatteryData>,
+    #[cfg(feature = "gpu")]
+    pub gpu_data: Option<Vec<ConvertedGpuData>>,
 }
 
 pub fn convert_temp_row(app: &App) -> TableData {
@@ -726,9 +727,18 @@ pub fn convert_arc_data_points(current_data: &data_farmer::DataCollection) -> Ve
 }
 
 #[cfg(feature = "gpu")]
-pub fn convert_gpu_labels(
+#[derive(Default, Debug)]
+pub struct ConvertedGpuData {
+    pub name: String,
+    pub mem_total: String,
+    pub mem_percent: String,
+    pub points: Vec<Point>,
+}
+
+#[cfg(feature = "gpu")]
+pub fn convert_gpu_data(
     current_data: &data_farmer::DataCollection,
-) -> Option<Vec<(String, String, String)>> {
+) -> Option<Vec<ConvertedGpuData>> {
     /// Returns the unit type and denominator for given total amount of memory in kibibytes.
     fn return_unit_and_denominator_for_mem_kib(mem_total_kib: u64) -> (&'static str, f64) {
         if mem_total_kib < 1024 {
@@ -746,64 +756,76 @@ pub fn convert_gpu_labels(
         }
     }
 
-    let mut results = Vec::with_capacity(current_data.gpu_harvest.len());
-
-    current_data.gpu_harvest.iter().for_each(|gpu| {
-        if gpu.1.mem_total_in_kib > 0 {
-            results.push((
-                format!("{:3.0}%", gpu.1.use_percent.unwrap_or(0.0)),
-                {
-                    let (unit, denominator) =
-                        return_unit_and_denominator_for_mem_kib(gpu.1.mem_total_in_kib);
-
-                    format!(
-                        "   {:.1}{}/{:.1}{}",
-                        gpu.1.mem_used_in_kib as f64 / denominator,
-                        unit,
-                        (gpu.1.mem_total_in_kib as f64 / denominator),
-                        unit
-                    )
-                },
-                gpu.0.to_owned(),
-            ));
-        }
-    });
-
-    if !results.is_empty() {
-        Some(results)
-    } else {
-        None
-    }
-}
-
-#[cfg(feature = "gpu")]
-pub fn convert_gpu_data_points(current_data: &data_farmer::DataCollection) -> Vec<Vec<Point>> {
-    let mut results: Vec<Vec<Point>> = Vec::with_capacity(current_data.gpu_harvest.len());
+    let mut results: Vec<ConvertedGpuData> =
+        Vec::with_capacity(current_data.gpu_harvest.len());
     let current_time = if let Some(frozen_instant) = current_data.frozen_instant {
         frozen_instant
     } else {
         current_data.current_instant
     };
 
+    // convert points
+    let mut point_vec: Vec<Vec<Point>> = Vec::with_capacity(current_data.timed_data_vec.len());
     for (time, data) in &current_data.timed_data_vec {
         data.gpu_data.iter().enumerate().for_each(|(index, point)| {
             if let Some(data_point) = point {
                 let time_from_start: f64 =
                     (current_time.duration_since(*time).as_millis() as f64).floor();
-                // add point to the gpu(s) point vector via index
-                if let Some(point_vec) = results.get_mut(index) {
-                    point_vec.push((-time_from_start, *data_point));
+                if let Some(point_slot) = point_vec.get_mut(index) {
+                    point_slot.push((-time_from_start, *data_point));
                 } else {
-                    results.push(vec![(-time_from_start, *data_point)]);
+                    let mut index_vec: Vec<Point> = Vec::with_capacity(data.gpu_data.len());
+                    index_vec.push((-time_from_start, *data_point));
+                    point_vec.push(index_vec);
                 }
             }
         });
+
         if *time == current_time {
             break;
         }
     }
 
-    results
+    // convert labels
+    current_data
+        .gpu_harvest
+        .iter()
+        .enumerate()
+        .for_each(|(index, gpu)| {
+            if gpu.1.mem_total_in_kib > 0 {
+                if let Some(points) = point_vec.get(index) {
+                    let short_name = {
+                        let last_words = gpu.0.split_whitespace().rev().take(2).collect::<Vec<_>>();
+                        let short_name = format!("{} {}", last_words[1], last_words[0]);
+                        short_name
+                    };
+
+                    results.push(ConvertedGpuData {
+                        name: short_name,
+                        points: points.to_owned(),
+                        mem_percent: format!("{:3.0}%", gpu.1.use_percent.unwrap_or(0.0)),
+                        mem_total: {
+                            let (unit, denominator) =
+                                return_unit_and_denominator_for_mem_kib(gpu.1.mem_total_in_kib);
+
+                            format!(
+                                "   {:.1}{}/{:.1}{}",
+                                gpu.1.mem_used_in_kib as f64 / denominator,
+                                unit,
+                                (gpu.1.mem_total_in_kib as f64 / denominator),
+                                unit
+                            )
+                        },
+                    });
+                }
+            }
+        });
+
+    if !results.is_empty() {
+        Some(results)
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
