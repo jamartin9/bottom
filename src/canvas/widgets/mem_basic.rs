@@ -20,7 +20,7 @@ impl Painter {
         let mem_data: &[(f64, f64)] = &app_state.converted_data.mem_data;
         let swap_data: &[(f64, f64)] = &app_state.converted_data.swap_data;
         let mut swap_used = false;
-        let mut size = 0;
+        let mut size = 1;
 
         let margined_loc = Layout::default()
             .constraints([Constraint::Percentage(100)])
@@ -37,7 +37,6 @@ impl Painter {
         }
 
         let ram_use_percentage = if let Some(mem) = mem_data.last() {
-            size += 1;
             mem.1
         } else {
             0.0
