@@ -4,7 +4,6 @@ use crate::app::data_harvester::disks::IoCounters;
 #[cfg(target_os = "freebsd")]
 pub fn zfs_io_stats() -> anyhow::Result<Vec<anyhow::Result<IoCounters>>> {
     use sysctl::Sysctl;
-    let mut results = vec![];
     let zfs_ctls: Vec<_> = sysctl::Ctl::new("kstat.zfs.")?
         .into_iter()
         .filter_map(|e| {
@@ -12,11 +11,10 @@ pub fn zfs_io_stats() -> anyhow::Result<Vec<anyhow::Result<IoCounters>>> {
                 let name = ctl.name();
                 if let Ok(name) = name {
                     if name.contains("objset-") {
-                        if name.contains("dataset_name") {
-                            Some(ctl)
-                        } else if name.contains("nwritten") {
-                            Some(ctl)
-                        } else if name.contains("nread") {
+                        if name.contains("dataset_name")
+                            || name.contains("nwritten")
+                            || name.contains("nread")
+                        {
                             Some(ctl)
                         } else {
                             None
@@ -30,39 +28,34 @@ pub fn zfs_io_stats() -> anyhow::Result<Vec<anyhow::Result<IoCounters>>> {
             })
         })
         .collect();
-    let mut nread = 0;
-    let mut nwrite = 0;
-    let mut ds_name = String::new();
-    let mut read = false;
-    let mut written = false;
 
-    for ctl in zfs_ctls {
-        if let Ok(name) = ctl.name() {
-            if name.contains("dataset_name") {
-                ds_name = ctl.value_string()?.to_owned();
-            } else if name.contains("nread") {
-                if let Ok(sysctl::CtlValue::U64(val)) = ctl.value() {
-                    nread = val;
+    use itertools::Itertools;
+    let results: Vec<anyhow::Result<IoCounters>> = zfs_ctls
+        .iter()
+        .chunks(3)
+        .into_iter()
+        .filter_map(|chunk| {
+            let mut nread = 0;
+            let mut nwrite = 0;
+            let mut ds_name = String::new();
+            for ctl in chunk {
+                if let Ok(name) = ctl.name() {
+                    if name.contains("dataset_name") {
+                        ds_name = ctl.value_string().ok()?;
+                    } else if name.contains("nread") {
+                        if let Ok(sysctl::CtlValue::U64(val)) = ctl.value() {
+                            nread = val;
+                        }
+                    } else if name.contains("nwritten") {
+                        if let Ok(sysctl::CtlValue::U64(val)) = ctl.value() {
+                            nwrite = val;
+                        }
+                    }
                 }
-                read = true;
-            } else if name.contains("nwritten") {
-                if let Ok(sysctl::CtlValue::U64(val)) = ctl.value() {
-                    nwrite = val;
-                }
-                written = true;
             }
-            if read && written && !ds_name.is_empty() {
-                let counter = IoCounters::new(ds_name.to_owned(), nread, nwrite);
-                //log::debug!("Adding io counter {:?}", counter);
-                results.push(Ok(counter));
-                written = false;
-                read = false;
-                nread = 0;
-                nwrite = 0;
-                ds_name = String::new();
-            }
-        }
-    }
+            Some(Ok(IoCounters::new(ds_name.to_string(), nread, nwrite)))
+        })
+        .collect();
     Ok(results)
 }
 
@@ -99,6 +92,7 @@ pub fn zfs_io_stats() -> anyhow::Result<Vec<anyhow::Result<IoCounters>>> {
                     })
                     .collect();
                 for dataset in datasets_vec {
+                    // TODO: [OPT] is this efficient?
                     if let Ok(contents) = std::fs::read_to_string(dataset) {
                         let mut nread = 0;
                         let mut nwritten = 0;
