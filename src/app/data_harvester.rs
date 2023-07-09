@@ -309,6 +309,7 @@ impl DataCollector {
             {
                 self.data.load_avg = cpu::get_load_avg().ok();
             }
+            // TODO add gpu utilization and use_gpu flag
         }
     }
 
@@ -322,11 +323,14 @@ impl DataCollector {
                 process_list.sort_unstable_by_key(|p| p.pid);
                 self.data.list_of_processes = Some(process_list);
             }
+            // TODO check use_gpu
+            //      add gpu processes
         }
     }
 
     #[inline]
     fn update_temps(&mut self) {
+        // TODO add use_gpu flag 
         if self.widgets_to_harvest.use_temp {
             #[cfg(not(target_os = "linux"))]
             if let Ok(data) = temperature::get_temperature_data(
@@ -368,6 +372,7 @@ impl DataCollector {
 
             #[cfg(feature = "gpu")]
             if self.widgets_to_harvest.use_gpu {
+                // TODO add/set gpu field instead of assign
                 self.data.gpu = memory::gpu::get_gpu_mem_usage();
             }
         }
