@@ -1,6 +1,5 @@
-use nvml_wrapper::enum_wrappers::device::TemperatureSensor;
-//use nvml_wrapper::struct_wrappers::device::ProcessUtilizationSample;
 use hashbrown::HashMap;
+use nvml_wrapper::enum_wrappers::device::TemperatureSensor;
 use nvml_wrapper::{error::NvmlError, Nvml};
 use once_cell::sync::Lazy;
 
@@ -24,36 +23,29 @@ pub struct GpuUtil {
     pub data_type: GpuUtilType,
     pub gpu_usage: u32,
 }
-/*
-pub struct GpuData {
-    pub name: String,
-    pub memory: Option<MemHarvest>,
-    pub temperature: Option<TempHarvest>,
-    pub usage: Option<GpuUtil>,
-    pub procs: Option<HashMap<u32, (u32, u32)>>,
+
+pub struct GpusData {
+    pub memory: Option<Vec<(String, MemHarvest)>>,
+    pub temperature: Option<Vec<TempHarvest>>,
+    pub usage: Option<Vec<GpuUtil>>,
+    pub procs: Option<Vec<HashMap<u32, (u32, u32)>>>,
     #[cfg(feature = "battery")]
-    pub battery: Option<BatteryHarvest>,
+    pub battery: Option<Vec<u32>>,
 }
-*/
 
 /// Returns the Gpu data of NVIDIA cards.
 #[inline]
 pub fn get_nvidia_vecs(
     temp_type: &TemperatureType, filter: &Option<Filter>, use_temp: bool, use_mem: bool,
     use_proc: bool, use_cpu: bool, use_battery: bool,
-) -> Option<(
-    Option<Vec<TempHarvest>>,
-    Option<Vec<(String, MemHarvest)>>,
-    Option<Vec<GpuUtil>>,
-    Option<Vec<HashMap<u32, (u32, u32)>>>,
-    Option<Vec<u32>>,
-)> {
+) -> Option<GpusData> {
     if let Ok(nvml) = &*NVML_DATA {
         if let Ok(num_gpu) = nvml.device_count() {
             let mut temp_vec = Vec::with_capacity(num_gpu as usize);
             let mut mem_vec = Vec::with_capacity(num_gpu as usize);
             let mut util_vec = Vec::with_capacity(num_gpu as usize);
             let mut proc_vec = Vec::with_capacity(num_gpu as usize);
+            #[cfg(feature = "battery")]
             let mut power_vec = Vec::with_capacity(num_gpu as usize);
 
             for i in 0..num_gpu {
@@ -114,6 +106,7 @@ pub fn get_nvidia_vecs(
                             }
                         }
 
+                        #[cfg(feature = "battery")]
                         if use_battery {
                             if let Ok(power) = device.power_usage() {
                                 power_vec.push(power);
@@ -122,33 +115,34 @@ pub fn get_nvidia_vecs(
                     }
                 }
             }
-            Some((
-                if temp_vec.is_empty() {
-                    None
-                } else {
-                    Some(temp_vec)
-                },
-                if mem_vec.is_empty() {
-                    None
-                } else {
+            Some(GpusData {
+                memory: if !mem_vec.is_empty() {
                     Some(mem_vec)
-                },
-                if util_vec.is_empty() {
-                    None
                 } else {
+                    None
+                },
+                temperature: if !temp_vec.is_empty() {
+                    Some(temp_vec)
+                } else {
+                    None
+                },
+                usage: if !util_vec.is_empty() {
                     Some(util_vec)
-                },
-                if proc_vec.is_empty() {
-                    None
                 } else {
+                    None
+                },
+                procs: if !proc_vec.is_empty() {
                     Some(proc_vec)
-                },
-                if power_vec.is_empty() {
-                    None
                 } else {
-                    Some(power_vec)
+                    None
                 },
-            ))
+                #[cfg(feature = "battery")]
+                battery: if !power_vec.is_empty() {
+                    Some(power_vec)
+                } else {
+                    None
+                },
+            })
         } else {
             None
         }

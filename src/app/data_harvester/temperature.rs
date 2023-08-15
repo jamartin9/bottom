@@ -13,9 +13,6 @@ cfg_if::cfg_if! {
     }
 }
 
-#[cfg(feature = "nvidia")]
-pub mod nvidia;
-
 use crate::app::Filter;
 
 #[derive(Default, Debug, Clone)]

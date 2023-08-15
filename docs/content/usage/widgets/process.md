@@ -32,6 +32,12 @@ It can also additionally display the following columns:
 
 - Process running time
 
+With the feature flag (`--enable_gpu`):
+
+- GPU memory use percentage
+- GPU core utilization percentage
+
+
 See [the processes configuration page](../../configuration/config-file/processes.md) on how to customize which columns
 are shown.
 

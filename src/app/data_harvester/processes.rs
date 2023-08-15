@@ -91,7 +91,6 @@ pub struct ProcessHarvest {
     /// Gpu utilization
     #[cfg(feature = "gpu")]
     pub gpu_util: u32,
-
     // TODO: Additional fields
     // pub rss_kb: u64,
     // pub virt_kb: u64,

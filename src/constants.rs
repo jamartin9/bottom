@@ -287,7 +287,8 @@ pub const HELP_CONTENTS_TEXT: [&str; 10] = [
 
 // TODO [Help]: Search in help?
 // TODO [Help]: Move to using tables for easier formatting?
-pub const GENERAL_HELP_TEXT: [&str; 32] = [ // TODO update with gpu info
+pub const GENERAL_HELP_TEXT: [&str; 32] = [
+    // TODO update with gpu info
     "1 - General",
     "q, Ctrl-c        Quit",
     "Esc              Close dialog windows, search, widgets, or exit expanded mode",

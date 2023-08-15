@@ -2,7 +2,7 @@
 
 use std::time::{Duration, Instant};
 
-#[cfg(any(target_os = "linux", feature = "nvidia"))]
+#[cfg(any(target_os = "linux", feature = "gpu"))]
 use hashbrown::HashMap;
 #[cfg(feature = "battery")]
 use starship_battery::{Battery, Manager};
@@ -126,7 +126,7 @@ pub struct DataCollector {
     #[cfg(target_family = "unix")]
     user_table: self::processes::UserTable,
 
-    #[cfg(feature = "nvidia")]
+    #[cfg(feature = "gpu")]
     gpu_pids: Option<Vec<HashMap<u32, (u32, u32)>>>,
 }
 
@@ -156,7 +156,7 @@ impl DataCollector {
             filters,
             #[cfg(target_family = "unix")]
             user_table: Default::default(),
-            #[cfg(feature = "nvidia")]
+            #[cfg(feature = "gpu")]
             gpu_pids: None,
         }
     }
@@ -291,7 +291,6 @@ impl DataCollector {
 
         self.data.collection_time = Instant::now();
 
-
         self.update_cpu_usage();
         self.update_memory_usage();
         self.update_temps();
@@ -302,7 +301,6 @@ impl DataCollector {
         self.update_processes();
         self.update_network_usage();
         self.update_disks();
-
 
         // Update times for future reference.
         self.last_collection_time = self.data.collection_time;
@@ -317,47 +315,59 @@ impl DataCollector {
             let use_cpu = self.widgets_to_harvest.use_cpu;
             let use_battery = self.widgets_to_harvest.use_battery;
             #[cfg(feature = "nvidia")]
-            if let Some((temp, mem, _util, proc, power)) = nvidia::get_nvidia_vecs(&self.temperature_type, &self.filters.temp_filter, use_temp, use_mem, use_proc, use_cpu, use_battery){
+            if let Some(data) = nvidia::get_nvidia_vecs(
+                &self.temperature_type,
+                &self.filters.temp_filter,
+                use_temp,
+                use_mem,
+                use_proc,
+                use_cpu,
+                use_battery,
+            ) {
                 if use_temp {
-                    if let Some(mut temp) = temp {
-                        if let Some(ref mut sensors) = self.data.temperature_sensors{
+                    if let Some(mut temp) = data.temperature {
+                        if let Some(ref mut sensors) = self.data.temperature_sensors {
                             sensors.append(&mut temp);
-                        }else{
+                        } else {
                             self.data.temperature_sensors = Some(temp);
                         }
                     }
                 }
                 if use_mem {
-                    if let Some(mem) = mem {
+                    if let Some(mem) = data.memory {
                         self.data.gpu = Some(mem);
                     }
                 }
-                if use_proc { // TODO ensure sort/columns render/work
-                    if let Some(proc) = proc {
-                        self.gpu_pids = Some(proc);
+                if use_proc {
+                    // TODO ensure sort/columns render/work TODO set default
+                    if let Some(proc) = data.procs {
+                        self.gpu_pids = Some(proc); // TODO add to windows
                     }
                 }
                 // TODO create and draw util vec
-                if use_cpu {
-                }
-                #[cfg(feature = "battery")] // TODO does this belong here?
+                if use_cpu {}
+                #[cfg(feature = "battery")]
+                // TODO does gpu power usage belong in batteries? should the draw logic be changed to include name?
                 {
                     use crate::data_harvester::batteries::BatteryHarvest;
                     use starship_battery::State;
                     if use_battery {
-                        if let Some(power) = power {
-                            let mut powers: Vec<BatteryHarvest> = power.iter().map(|milliwatt|{
-                                BatteryHarvest {
-                                    charge_percent: 100.0,
-                                    secs_until_full: None,
-                                    secs_until_empty: None,
-                                    power_consumption_rate_watts: (milliwatt / 1000) as f64, // convert milliwatts to watts
-                                    health_percent: 100.0,
-                                    state: State::Unknown,
-                                }
-                            }).collect();
+                        if let Some(power) = data.battery {
+                            let mut powers: Vec<BatteryHarvest> = power
+                                .iter()
+                                .map(|milliwatt| {
+                                    BatteryHarvest {
+                                        charge_percent: 100.0,
+                                        secs_until_full: None,
+                                        secs_until_empty: None,
+                                        power_consumption_rate_watts: (milliwatt / 1000) as f64, // convert milliwatts to watts
+                                        health_percent: 100.0,
+                                        state: State::Unknown,
+                                    }
+                                })
+                                .collect();
                             if let Some(ref mut batts) = self.data.list_of_batteries {
-                                batts.append(& mut powers);
+                                batts.append(&mut powers);
                             } else {
                                 self.data.list_of_batteries = Some(powers);
                             }
@@ -409,7 +419,7 @@ impl DataCollector {
             if let Ok(data) =
                 temperature::get_temperature_data(&self.temperature_type, &self.filters.temp_filter)
             {
-                self.data.temperature_sensors = data
+                self.data.temperature_sensors = data;
             }
         }
     }
