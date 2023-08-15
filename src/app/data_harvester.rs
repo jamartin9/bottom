@@ -332,7 +332,7 @@ impl DataCollector {
                         self.data.gpu = Some(mem);
                     }
                 }
-                if use_proc { // TODO ensure sort works
+                if use_proc { // TODO ensure sort/columns render/work
                     if let Some(proc) = proc {
                         self.gpu_pids = Some(proc);
                     }

@@ -629,6 +629,9 @@ pub enum PrefixType {
     State,
     User,
     Time,
+    // TODO feature gate
+    PGpu,
+    PGMem,
     __Nonexhaustive,
 }
 
@@ -653,6 +656,8 @@ impl std::str::FromStr for PrefixType {
             "state" => Ok(State),
             "user" => Ok(User),
             "time" => Ok(Time),
+            "gmem%" => Ok(PGMem),
+            "gpu%" => Ok(PGpu),
             _ => Ok(Name),
         }
     }
@@ -790,6 +795,16 @@ impl Prefix {
                     PrefixType::TWrite => matches_condition(
                         &numerical_query.condition,
                         process.total_write_bytes as f64,
+                        numerical_query.value,
+                    ),
+                    PrefixType::PGpu => matches_condition(
+                        &numerical_query.condition,
+                        process.gpu_util,
+                        numerical_query.value,
+                    ),
+                    PrefixType::PGMem => matches_condition(
+                        &numerical_query.condition,
+                        process.gpu_mem,
                         numerical_query.value,
                     ),
                     _ => true,

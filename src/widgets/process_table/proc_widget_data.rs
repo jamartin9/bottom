@@ -181,6 +181,8 @@ pub struct ProcWidgetData {
     pub num_similar: u64,
     pub disabled: bool,
     pub time: Duration,
+    pub gpu_mem_usage: u32,// TODO feature gate
+    pub gpu_usage: u32,
 }
 
 impl ProcWidgetData {
@@ -216,6 +218,8 @@ impl ProcWidgetData {
             num_similar: 1,
             disabled: false,
             time: process.time,
+            gpu_mem_usage: process.gpu_mem,
+            gpu_usage: process.gpu_util,
         }
     }
 
@@ -264,6 +268,8 @@ impl ProcWidgetData {
             ProcColumn::State => self.process_char.to_string(),
             ProcColumn::User => self.user.clone(),
             ProcColumn::Time => format_time(self.time),
+            ProcColumn::GpuMemPercent => self.gpu_mem_usage.to_string(),
+            ProcColumn::GpuUtilPercent => format!("{:.1}%", self.gpu_usage),
         }
     }
 }
@@ -298,6 +304,8 @@ impl DataToCell<ProcColumn> for ProcWidgetData {
                 }
                 ProcColumn::User => self.user.clone(),
                 ProcColumn::Time => format_time(self.time),
+                ProcColumn::GpuMemPercent => self.gpu_mem_usage.to_string(),
+                ProcColumn::GpuUtilPercent => format!("{:.1}%", self.gpu_usage),
             },
             calculated_width,
         ))

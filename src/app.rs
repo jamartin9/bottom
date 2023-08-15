@@ -1233,7 +1233,7 @@ impl App {
                 }
             }
             'p' => {
-                if let BottomWidgetType::Proc = self.current_widget.widget_type {
+                if let BottomWidgetType::Proc = self.current_widget.widget_type { // TODO add gpu shortcut
                     if let Some(proc_widget_state) = self
                         .states
                         .proc_state

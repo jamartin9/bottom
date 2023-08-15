@@ -347,16 +347,13 @@ pub(crate) fn linux_process_data(
                     ) {
                         #[cfg(feature = "gpu")]
                         if let Some(gpus) = &collector.gpu_pids {
-                            let mut gpu_mem = 0;
-                            let mut gpu_util = 0;
                             gpus.iter().for_each(|gpu| { // add mem/util for all gpus to pid
                                 if let Some((mem, util)) = gpu.get(&(pid as u32)) {
-                                    gpu_mem += mem;
-                                    gpu_util += util;
+                                    process_harvest.gpu_mem += mem;
+                                    process_harvest.gpu_util += util;
+                                    log::debug!("Adding gpu proc data for pid {:#?}", pid);
                                 }
                             });
-                            process_harvest.gpu_mem = gpu_mem;
-                            process_harvest.gpu_util = gpu_util;
                         }
 
                         prev_proc_details.cpu_time = new_process_times;

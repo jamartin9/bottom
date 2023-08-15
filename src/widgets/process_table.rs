@@ -91,6 +91,8 @@ fn make_column(column: ProcColumn) -> SortColumn<ProcColumn> {
         User => SortColumn::soft(User, Some(0.05)),
         State => SortColumn::hard(State, 7),
         Time => SortColumn::new(Time),
+        GpuMemPercent => SortColumn::new(GpuMemPercent).default_descending(),
+        GpuUtilPercent => SortColumn::new(GpuUtilPercent).default_descending(),
     }
 }
 
@@ -117,6 +119,8 @@ pub enum ProcWidgetColumn {
     User,
     State,
     Time,
+    GpuMem,
+    GpuUtil,
 }
 
 impl<'de> Deserialize<'de> for ProcWidgetColumn {
@@ -140,6 +144,8 @@ impl<'de> Deserialize<'de> for ProcWidgetColumn {
             "state" => Ok(ProcWidgetColumn::State),
             "user" => Ok(ProcWidgetColumn::User),
             "time" => Ok(ProcWidgetColumn::Time),
+            "gmem%" => Ok(ProcWidgetColumn::GpuMem),
+            "gpu%" => Ok(ProcWidgetColumn::GpuUtil),
             _ => Err(D::Error::custom("doesn't match any column type")),
         }
     }
@@ -277,6 +283,8 @@ impl ProcWidgetState {
                             ProcWidgetColumn::User => User,
                             ProcWidgetColumn::State => State,
                             ProcWidgetColumn::Time => Time,
+                            ProcWidgetColumn::GpuMem => GpuMemPercent,
+                            ProcWidgetColumn::GpuUtil => GpuUtilPercent,
                         };
 
                         make_column(col)
@@ -293,7 +301,7 @@ impl ProcWidgetState {
                         TotalRead,
                         TotalWrite,
                         User,
-                        State,
+                        State,// TODO add gpu default?
                     ];
 
                     default_columns.into_iter().map(make_column).collect()
@@ -318,6 +326,8 @@ impl ProcWidgetState {
                     State => ProcWidgetColumn::State,
                     User => ProcWidgetColumn::User,
                     Time => ProcWidgetColumn::Time,
+                    GpuMemPercent => ProcWidgetColumn::GpuMem,
+                    GpuUtilPercent => ProcWidgetColumn::GpuUtil,
                 }
             })
             .collect::<IndexSet<_>>();
