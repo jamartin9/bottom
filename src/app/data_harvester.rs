@@ -295,14 +295,14 @@ impl DataCollector {
         self.update_cpu_usage();
         self.update_memory_usage();
         self.update_temps();
+        #[cfg(feature = "battery")]
+        self.update_batteries();
         #[cfg(feature = "gpu")]
-        self.update_gpus(); // update before proc for gpu_pids but after temp for appending
+        self.update_gpus(); // update_gpus before procs for gpu_pids but after temp/batteries for appending
         self.update_processes();
         self.update_network_usage();
         self.update_disks();
 
-        #[cfg(feature = "battery")]
-        self.update_batteries();
 
         // Update times for future reference.
         self.last_collection_time = self.data.collection_time;
@@ -317,7 +317,7 @@ impl DataCollector {
             let use_cpu = self.widgets_to_harvest.use_cpu;
             let use_battery = self.widgets_to_harvest.use_battery;
             #[cfg(feature = "nvidia")]
-            if let Some((temp, mem, _util, proc, _power)) = nvidia::get_nvidia_vecs(&self.temperature_type, &self.filters.temp_filter, use_temp, use_mem, use_proc, use_cpu, use_battery){
+            if let Some((temp, mem, _util, proc, power)) = nvidia::get_nvidia_vecs(&self.temperature_type, &self.filters.temp_filter, use_temp, use_mem, use_proc, use_cpu, use_battery){
                 if use_temp {
                     if let Some(mut temp) = temp {
                         if let Some(ref mut sensors) = self.data.temperature_sensors{
@@ -340,9 +340,29 @@ impl DataCollector {
                 // TODO create and draw util vec
                 if use_cpu {
                 }
-                // TODO create battery vec
-                #[cfg(feature = "battery")]
-                if use_battery {
+                #[cfg(feature = "battery")] // TODO does this belong here?
+                {
+                    use crate::data_harvester::batteries::BatteryHarvest;
+                    use starship_battery::State;
+                    if use_battery {
+                        if let Some(power) = power {
+                            let mut powers: Vec<BatteryHarvest> = power.iter().map(|milliwatt|{
+                                BatteryHarvest {
+                                    charge_percent: 100.0,
+                                    secs_until_full: None,
+                                    secs_until_empty: None,
+                                    power_consumption_rate_watts: (milliwatt / 1000) as f64, // convert milliwatts to watts
+                                    health_percent: 100.0,
+                                    state: State::Unknown,
+                                }
+                            }).collect();
+                            if let Some(ref mut batts) = self.data.list_of_batteries {
+                                batts.append(& mut powers);
+                            } else {
+                                self.data.list_of_batteries = Some(powers);
+                            }
+                        }
+                    }
                 }
             }
         }
