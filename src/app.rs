@@ -2703,7 +2703,12 @@ impl App {
                                 {
                                     if (x >= *tlc_x && y >= *tlc_y) && (x <= *brc_x && y <= *brc_y)
                                     {
-                                        battery_widget_state.currently_selected_battery_index = itx;
+                                        if itx >= self.converted_data.battery_data.len() { // range check to keep within current data
+                                            battery_widget_state.currently_selected_battery_index = self.converted_data.battery_data.len() - 1;
+                                        }
+                                        else {
+                                            battery_widget_state.currently_selected_battery_index = itx;
+                                        }
                                         break;
                                     }
                                 }
