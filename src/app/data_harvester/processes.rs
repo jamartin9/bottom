@@ -83,6 +83,15 @@ pub struct ProcessHarvest {
 
     /// This is the process' user.
     pub user: Cow<'static, str>,
+
+    /// Gpu memory usage
+    #[cfg(feature = "gpu")]
+    pub gpu_mem: u32,
+
+    /// Gpu utilization
+    #[cfg(feature = "gpu")]
+    pub gpu_util: u32,
+
     // TODO: Additional fields
     // pub rss_kb: u64,
     // pub virt_kb: u64,

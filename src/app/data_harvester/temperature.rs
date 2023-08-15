@@ -32,15 +32,15 @@ pub enum TemperatureType {
     Fahrenheit,
 }
 
-fn convert_celsius_to_kelvin(celsius: f32) -> f32 {
+pub fn convert_celsius_to_kelvin(celsius: f32) -> f32 {
     celsius + 273.15
 }
 
-fn convert_celsius_to_fahrenheit(celsius: f32) -> f32 {
+pub fn convert_celsius_to_fahrenheit(celsius: f32) -> f32 {
     (celsius * (9.0 / 5.0)) + 32.0
 }
 
-fn is_temp_filtered(filter: &Option<Filter>, text: &str) -> bool {
+pub fn is_temp_filtered(filter: &Option<Filter>, text: &str) -> bool {
     if let Some(filter) = filter {
         let mut ret = filter.is_list_ignored;
         for r in &filter.list {
