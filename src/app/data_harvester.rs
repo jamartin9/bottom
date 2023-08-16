@@ -346,22 +346,22 @@ impl DataCollector {
                 // TODO create and draw util vec
                 if use_cpu {}
                 #[cfg(feature = "battery")]
-                // TODO does gpu power usage belong in batteries? should the draw logic be changed to include name?
                 {
                     use crate::data_harvester::batteries::BatteryHarvest;
                     use starship_battery::State;
                     if use_battery {
                         if let Some(power) = data.battery {
                             let mut powers: Vec<BatteryHarvest> = power
-                                .iter()
-                                .map(|milliwatt| {
+                                .into_iter()
+                                .map(|pwr| {
                                     BatteryHarvest {
                                         charge_percent: 100.0,
                                         secs_until_full: None,
                                         secs_until_empty: None,
-                                        power_consumption_rate_watts: (milliwatt / 1000) as f64, // convert milliwatts to watts
+                                        power_consumption_rate_watts: (pwr.1 / 1000) as f64, // convert milliwatts to watts
                                         health_percent: 100.0,
                                         state: State::Unknown,
+                                        name: pwr.0,
                                     }
                                 })
                                 .collect();

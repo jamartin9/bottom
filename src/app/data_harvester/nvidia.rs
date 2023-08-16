@@ -31,7 +31,7 @@ pub struct GpusData {
     pub usage: Option<Vec<GpuUtil>>,
     pub procs: Option<Vec<HashMap<u32, (u64, u32)>>>,
     #[cfg(feature = "battery")]
-    pub battery: Option<Vec<u32>>,
+    pub battery: Option<Vec<(String, u32)>>,
 }
 
 /// Returns the Gpu data of NVIDIA cards.
@@ -81,7 +81,10 @@ pub fn get_nvidia_vecs(
                                             convert_celsius_to_fahrenheit(temperature)
                                         }
                                     };
-                                    temp_vec.push(TempHarvest { name, temperature });
+                                    temp_vec.push(TempHarvest {
+                                        name: name.clone(),
+                                        temperature,
+                                    });
                                 }
                             }
                         }
@@ -138,7 +141,7 @@ pub fn get_nvidia_vecs(
                         #[cfg(feature = "battery")]
                         if use_battery {
                             if let Ok(power) = device.power_usage() {
-                                power_vec.push(power);
+                                power_vec.push((name, power));
                             }
                         }
                     }
