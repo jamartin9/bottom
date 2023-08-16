@@ -288,7 +288,6 @@ pub const HELP_CONTENTS_TEXT: [&str; 10] = [
 // TODO [Help]: Search in help?
 // TODO [Help]: Move to using tables for easier formatting?
 pub const GENERAL_HELP_TEXT: [&str; 32] = [
-    // TODO update with gpu info
     "1 - General",
     "q, Ctrl-c        Quit",
     "Esc              Close dialog windows, search, widgets, or exit expanded mode",
@@ -328,7 +327,7 @@ pub const CPU_HELP_TEXT: [&str; 2] = [
     "Mouse scroll     Scrolling over an CPU core/average shows only that entry on the chart",
 ];
 
-pub const PROCESS_HELP_TEXT: [&str; 15] = [
+pub const PROCESS_HELP_TEXT: [&str; 17] = [
     "3 - Process widget",
     "dd, F9           Kill the selected process",
     "c                Sort by CPU usage, press again to reverse",
@@ -344,9 +343,12 @@ pub const PROCESS_HELP_TEXT: [&str; 15] = [
     "t, F5            Toggle tree mode",
     "+, -, click      Collapse/expand a branch while in tree mode",
     "click on header  Sorts the entries by that column, click again to invert the sort",
+    "C                Sort by GPU usage, press again to reverse",
+    "M                Sort by GPU memory usage, press again to reverse",
+
 ];
 
-pub const SEARCH_HELP_TEXT: [&str; 48] = [
+pub const SEARCH_HELP_TEXT: [&str; 50] = [
     "4 - Process search widget",
     "Esc              Close the search widget (retains the filter)",
     "Ctrl-a           Skip to the start of the search query",
@@ -374,6 +376,8 @@ pub const SEARCH_HELP_TEXT: [&str; 48] = [
     "twrite, t.write  ex: twrite = 1",
     "user             ex: user = root",
     "state            ex: state = running",
+    "gpu%             ex: gpu% < 4.2",
+    "gmem             ex: gmem < 100 kb",
     "",
     "Comparison operators:",
     "=                ex: cpu = 1",
