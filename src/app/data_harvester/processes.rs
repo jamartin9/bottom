@@ -84,11 +84,11 @@ pub struct ProcessHarvest {
     /// This is the process' user.
     pub user: Cow<'static, str>,
 
-    /// Gpu memory usage
+    /// Gpu memory usage as bytes.
     #[cfg(feature = "gpu")]
-    pub gpu_mem: u32,
+    pub gpu_mem: u64,
 
-    /// Gpu utilization
+    /// Gpu utilization as a percentage.
     #[cfg(feature = "gpu")]
     pub gpu_util: u32,
     // TODO: Additional fields
@@ -106,6 +106,11 @@ impl ProcessHarvest {
         self.total_read_bytes += rhs.total_read_bytes;
         self.total_write_bytes += rhs.total_write_bytes;
         self.time += rhs.time;
+        #[cfg(feature = "gpu")]
+        {
+            self.gpu_mem += rhs.gpu_mem;
+            self.gpu_util += rhs.gpu_util;
+        }
     }
 }
 

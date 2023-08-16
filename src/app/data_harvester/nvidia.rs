@@ -1,5 +1,6 @@
 use hashbrown::HashMap;
 use nvml_wrapper::enum_wrappers::device::TemperatureSensor;
+use nvml_wrapper::enums::device::UsedGpuMemory;
 use nvml_wrapper::{error::NvmlError, Nvml};
 use once_cell::sync::Lazy;
 
@@ -28,7 +29,7 @@ pub struct GpusData {
     pub memory: Option<Vec<(String, MemHarvest)>>,
     pub temperature: Option<Vec<TempHarvest>>,
     pub usage: Option<Vec<GpuUtil>>,
-    pub procs: Option<Vec<HashMap<u32, (u32, u32)>>>,
+    pub procs: Option<Vec<HashMap<u32, (u64, u32)>>>,
     #[cfg(feature = "battery")]
     pub battery: Option<Vec<u32>>,
 }
@@ -93,15 +94,43 @@ pub fn get_nvidia_vecs(
                             }
                         }
                         if use_proc {
+                            let mut procs = HashMap::new();
                             if let Ok(gpu_procs) = device.process_utilization_stats(None) {
-                                let mut procs = HashMap::with_capacity(gpu_procs.len());
                                 for proc in gpu_procs {
                                     let pid = proc.pid;
-                                    let gpu_mem = proc.mem_util;
                                     let gpu_util = proc.sm_util + proc.enc_util + proc.dec_util;
-                                    log::debug!("Inserting proc for {:#?}", pid);
-                                    procs.insert(pid, (gpu_mem, gpu_util));
+                                    procs.insert(pid, (0, gpu_util));
                                 }
+                            }
+                            if let Ok(compute_procs) = device.running_compute_processes() {
+                                for proc in compute_procs {
+                                    let pid = proc.pid;
+                                    let gpu_mem = match proc.used_gpu_memory {
+                                        UsedGpuMemory::Used(val) => val,
+                                        UsedGpuMemory::Unavailable => 0,
+                                    };
+                                    if let Some(prev) = procs.get(&pid) {
+                                        procs.insert(pid, (gpu_mem, prev.1));
+                                    } else {
+                                        procs.insert(pid, (gpu_mem, 0));
+                                    }
+                                }
+                            }
+                            if let Ok(graphics_procs) = device.running_graphics_processes() {
+                                for proc in graphics_procs {
+                                    let pid = proc.pid;
+                                    let gpu_mem = match proc.used_gpu_memory {
+                                        UsedGpuMemory::Used(val) => val,
+                                        UsedGpuMemory::Unavailable => 0,
+                                    };
+                                    if let Some(prev) = procs.get(&pid) {
+                                        procs.insert(pid, (gpu_mem, prev.1));
+                                    } else {
+                                        procs.insert(pid, (gpu_mem, 0));
+                                    }
+                                }
+                            }
+                            if !procs.is_empty() {
                                 proc_vec.push(procs);
                             }
                         }

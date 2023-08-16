@@ -127,7 +127,7 @@ pub struct DataCollector {
     user_table: self::processes::UserTable,
 
     #[cfg(feature = "gpu")]
-    gpu_pids: Option<Vec<HashMap<u32, (u32, u32)>>>,
+    gpu_pids: Option<Vec<HashMap<u32, (u64, u32)>>>,
 }
 
 impl DataCollector {
@@ -339,9 +339,8 @@ impl DataCollector {
                     }
                 }
                 if use_proc {
-                    // TODO ensure sort/columns render/work TODO set default
                     if let Some(proc) = data.procs {
-                        self.gpu_pids = Some(proc); // TODO add to windows
+                        self.gpu_pids = Some(proc); // TODO gpu add to windows
                     }
                 }
                 // TODO create and draw util vec

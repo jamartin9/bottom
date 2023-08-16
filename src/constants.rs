@@ -592,7 +592,7 @@ pub const CONFIG_TEXT: &str = r##"# This is a default config file for bottom.  A
 # These are flags around the process widget.
 
 #[processes]
-#columns = ["PID", "Name", "CPU%", "Mem%", "R/s", "W/s", "T.Read", "T.Write", "User", "State", "GMEM%", "GPU%"]
+#columns = ["PID", "Name", "CPU%", "Mem%", "R/s", "W/s", "T.Read", "T.Write", "User", "State", "GMEM", "GPU%"]
 
 # These are all the components that support custom theming.  Note that colour support
 # will depend on terminal support.

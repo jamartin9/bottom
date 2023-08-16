@@ -352,7 +352,6 @@ pub(crate) fn linux_process_data(
                                 if let Some((mem, util)) = gpu.get(&(pid as u32)) {
                                     process_harvest.gpu_mem += mem;
                                     process_harvest.gpu_util += util;
-                                    //log::debug!("Adding gpu proc data for pid {:#?}", pid);
                                 }
                             });
                         }

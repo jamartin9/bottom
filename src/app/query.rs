@@ -386,6 +386,7 @@ pub fn parse_query(
                                         | PrefixType::Rps
                                         | PrefixType::Wps
                                         | PrefixType::TRead
+                                        | PrefixType::GMem
                                         | PrefixType::TWrite => {
                                             // If no unit, assume base.
                                             // Furthermore, base must be PEEKED at initially, and will
@@ -631,8 +632,8 @@ pub enum PrefixType {
     Time,
     #[cfg(feature = "gpu")]
     PGpu,
-    #[cfg(feature = "gpu")]
-    PGMem,
+    //#[cfg(feature = "gpu")]
+    GMem,
     __Nonexhaustive,
 }
 
@@ -658,7 +659,7 @@ impl std::str::FromStr for PrefixType {
             "user" => Ok(User),
             "time" => Ok(Time),
             #[cfg(feature = "gpu")]
-            "gmem%" => Ok(PGMem),
+            "gmem" => Ok(GMem),
             #[cfg(feature = "gpu")]
             "gpu%" => Ok(PGpu),
             _ => Ok(Name),
@@ -807,9 +808,9 @@ impl Prefix {
                         numerical_query.value,
                     ),
                     #[cfg(feature = "gpu")]
-                    PrefixType::PGMem => matches_condition(
+                    PrefixType::GMem => matches_condition(
                         &numerical_query.condition,
-                        process.gpu_mem,
+                        process.gpu_mem as f64,
                         numerical_query.value,
                     ),
                     _ => true,

@@ -182,7 +182,7 @@ pub struct ProcWidgetData {
     pub disabled: bool,
     pub time: Duration,
     #[cfg(feature = "gpu")]
-    pub gpu_mem_usage: u32,
+    pub gpu_mem_usage: u64,
     #[cfg(feature = "gpu")]
     pub gpu_usage: u32,
 }
@@ -278,7 +278,7 @@ impl ProcWidgetData {
             ProcColumn::User => self.user.clone(),
             ProcColumn::Time => format_time(self.time),
             #[cfg(feature = "gpu")]
-            ProcColumn::GpuMemPercent => format!("{:.1}%", self.gpu_mem_usage),
+            ProcColumn::GpuMem => self.gpu_mem_usage.to_string(),
             #[cfg(feature = "gpu")]
             ProcColumn::GpuUtilPercent => format!("{:.1}%", self.gpu_usage),
         }
@@ -316,7 +316,7 @@ impl DataToCell<ProcColumn> for ProcWidgetData {
                 ProcColumn::User => self.user.clone(),
                 ProcColumn::Time => format_time(self.time),
                 #[cfg(feature = "gpu")]
-                ProcColumn::GpuMemPercent => format!("{:.1}%", self.gpu_mem_usage),
+                ProcColumn::GpuMem => binary_byte_string(self.gpu_mem_usage),
                 #[cfg(feature = "gpu")]
                 ProcColumn::GpuUtilPercent => format!("{:.1}%", self.gpu_usage),
             },
