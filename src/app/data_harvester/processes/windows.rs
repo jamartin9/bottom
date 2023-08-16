@@ -116,7 +116,6 @@ pub fn sysinfo_process_data(
             gpu_mem,
             #[cfg(feature = "gpu")]
             gpu_util,
-
         });
     }
 
