@@ -345,7 +345,6 @@ pub const PROCESS_HELP_TEXT: [&str; 17] = [
     "click on header  Sorts the entries by that column, click again to invert the sort",
     "C                Sort by GPU usage, press again to reverse",
     "M                Sort by GPU memory usage, press again to reverse",
-
 ];
 
 pub const SEARCH_HELP_TEXT: [&str; 50] = [
