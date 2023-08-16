@@ -345,7 +345,7 @@ impl DataCollector {
                 }
                 // TODO create and draw util vec
                 if use_cpu {}
-                #[cfg(feature = "battery")]
+                #[cfg(all(feature = "battery", target_os = "linux"))]
                 {
                     use crate::data_harvester::batteries::BatteryHarvest;
                     use starship_battery::State;
