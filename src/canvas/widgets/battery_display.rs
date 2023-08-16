@@ -71,13 +71,8 @@ impl Painter {
             };
 
             let show_tabs = {
-                if app_state.app_config_fields.enable_gpu {
-                    true
-                } else if app_state.converted_data.battery_data.len() > 1 {
-                    true
-                } else {
-                    false
-                }
+                app_state.app_config_fields.enable_gpu
+                    && app_state.converted_data.battery_data.len() > 1
             };
 
             if show_tabs {
