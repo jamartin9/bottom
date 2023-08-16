@@ -113,7 +113,7 @@ impl ColumnHeader for ProcColumn {
             #[cfg(feature = "gpu")]
             ProcColumn::GpuMem => "GMEM",
             #[cfg(feature = "gpu")]
-            ProcColumn::GpuUtilPercent => "GPU%%",
+            ProcColumn::GpuUtilPercent => "GPU%",
         }
         .into()
     }
