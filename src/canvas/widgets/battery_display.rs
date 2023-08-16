@@ -72,7 +72,7 @@ impl Painter {
 
             let show_tabs = {
                 app_state.app_config_fields.enable_gpu
-                    && app_state.converted_data.battery_data.len() > 1
+                    || app_state.converted_data.battery_data.len() > 1
             };
 
             if show_tabs {
