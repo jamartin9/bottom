@@ -6,6 +6,7 @@ use once_cell::sync::Lazy;
 
 use crate::app::Filter;
 
+use crate::data_harvester::cpu::{CpuData, CpuDataType};
 use crate::data_harvester::memory::MemHarvest;
 use crate::data_harvester::temperature::{
     convert_celsius_to_fahrenheit, convert_celsius_to_kelvin, is_temp_filtered, TempHarvest,
@@ -14,21 +15,10 @@ use crate::data_harvester::temperature::{
 
 pub static NVML_DATA: Lazy<Result<Nvml, NvmlError>> = Lazy::new(Nvml::init);
 
-//pub type GpuLoadAvgHarvest = [u32; 3];
-
-pub enum GpuUtilType {
-    Avg,
-    Gpu(usize),
-}
-pub struct GpuUtil {
-    pub data_type: GpuUtilType,
-    pub gpu_usage: u32,
-}
-
 pub struct GpusData {
     pub memory: Option<Vec<(String, MemHarvest)>>,
     pub temperature: Option<Vec<TempHarvest>>,
-    pub usage: Option<Vec<GpuUtil>>,
+    pub usage: Option<Vec<CpuData>>,
     pub procs: Option<Vec<HashMap<u32, (u64, u32)>>>,
     #[cfg(feature = "battery")]
     pub battery: Option<Vec<(String, u32)>>,
@@ -90,9 +80,9 @@ pub fn get_nvidia_vecs(
                         }
                         if use_cpu {
                             if let Ok(util) = device.utilization_rates() {
-                                util_vec.push(GpuUtil {
-                                    gpu_usage: util.gpu,
-                                    data_type: GpuUtilType::Gpu(i as usize),
+                                util_vec.push(CpuData {
+                                    cpu_usage: util.gpu as f64,
+                                    data_type: CpuDataType::Gpu(i as usize),
                                 });
                             }
                         }

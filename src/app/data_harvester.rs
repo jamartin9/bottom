@@ -297,7 +297,7 @@ impl DataCollector {
         #[cfg(feature = "battery")]
         self.update_batteries();
         #[cfg(feature = "gpu")]
-        self.update_gpus(); // update_gpus before procs for gpu_pids but after temp/batteries for appending
+        self.update_gpus(); // update_gpus before procs for gpu_pids but after temp/batteries/cpu_usage for appending
         self.update_processes();
         self.update_network_usage();
         self.update_disks();
@@ -340,11 +340,18 @@ impl DataCollector {
                 }
                 if use_proc {
                     if let Some(proc) = data.procs {
-                        self.gpu_pids = Some(proc); // TODO gpu add to windows
+                        self.gpu_pids = Some(proc);
                     }
                 }
-                // TODO create and draw util vec
-                if use_cpu {}
+                if use_cpu {
+                    if let Some(mut cpu) = data.usage {
+                        if let Some(ref mut cpus) = self.data.cpu {
+                            cpus.append(&mut cpu);
+                        } else {
+                            self.data.cpu = Some(cpu);
+                        }
+                    }
+                }
                 #[cfg(all(feature = "battery", target_os = "linux"))]
                 {
                     use crate::data_harvester::batteries::BatteryHarvest;

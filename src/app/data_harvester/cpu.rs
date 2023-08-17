@@ -9,6 +9,8 @@ pub type LoadAvgHarvest = [f32; 3];
 pub enum CpuDataType {
     Avg,
     Cpu(usize),
+    #[cfg(feature = "gpu")]
+    Gpu(usize),
 }
 
 #[derive(Debug, Clone)]
