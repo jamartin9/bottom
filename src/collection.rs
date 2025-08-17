@@ -166,8 +166,8 @@ pub struct DataCollector {
     #[cfg(any(not(target_os = "linux"), feature = "battery"))]
     should_refresh_list: bool,
 
-    #[cfg(target_os = "linux")]
-    pid_mapping: HashMap<Pid, processes::PrevProcDetails>,
+//    #[cfg(target_os = "linux")]
+//    pid_mapping: HashMap<Pid, processes::PrevProcDetails>,
     #[cfg(target_os = "linux")]
     prev_idle: f64,
     #[cfg(target_os = "linux")]
@@ -198,8 +198,8 @@ impl DataCollector {
         DataCollector {
             data: Data::default(),
             sys: SysinfoSource::default(),
-            #[cfg(target_os = "linux")]
-            pid_mapping: HashMap::default(),
+            //#[cfg(target_os = "linux")]
+            //pid_mapping: HashMap::default(),
             #[cfg(target_os = "linux")]
             prev_idle: 0_f64,
             #[cfg(target_os = "linux")]
@@ -293,8 +293,6 @@ impl DataCollector {
         // - Processes (users list as well for Windows)
         // - Disks (Windows only)
         // - Temperatures and temperature components list.
-        #[cfg(not(target_os = "linux"))]
-        {
             if self.widgets_to_harvest.use_proc {
                 self.sys.system.refresh_processes_specifics(
                     sysinfo::ProcessesToUpdate::All,
@@ -311,6 +309,8 @@ impl DataCollector {
                     self.sys.users.refresh();
                 }
             }
+        #[cfg(not(target_os = "linux"))]
+        {
 
             if self.widgets_to_harvest.use_temp {
                 if self.should_refresh_list {

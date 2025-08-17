@@ -8,8 +8,11 @@ use sysinfo::ProcessStatus;
 
 cfg_if! {
     if #[cfg(target_os = "linux")] {
-        pub mod linux;
-        pub use self::linux::*;
+        //pub mod linux;
+        //pub use self::linux::*;
+        pub(crate) struct GenericProcessExt;
+        impl UnixProcessExt for GenericProcessExt {}
+
     } else if #[cfg(target_os = "macos")] {
         pub mod macos;
         pub(crate) use self::macos::*;
@@ -111,6 +114,10 @@ pub struct ProcessHarvest {
     /// Gpu utilization as a percentage.
     #[cfg(feature = "gpu")]
     pub gpu_util: u32,
+
+    #[cfg(target_os = "linux")]
+    /// Thread type
+    pub k_thread: bool,
     // TODO: Additional fields
     // pub rss_kb: u64,
     // pub virt_kb: u64,
@@ -119,7 +126,7 @@ pub struct ProcessHarvest {
 impl DataCollector {
     pub(crate) fn get_processes(&mut self) -> CollectionResult<Vec<ProcessHarvest>> {
         cfg_if! {
-            if #[cfg(target_os = "linux")] {
+           /* if #[cfg(target_os = "linux")] {
                 let time_diff = self.data.collection_time
                     .duration_since(self.last_collection_time)
                     .as_secs();
@@ -128,7 +135,7 @@ impl DataCollector {
                     self,
                     time_diff,
                 )
-            } else if #[cfg(any(target_os = "freebsd", target_os = "macos", target_os = "windows", target_os = "android", target_os = "ios"))] {
+            } else*/ if #[cfg(any(target_os = "freebsd", target_os = "macos", target_os = "windows", target_os = "android", target_os = "ios", target_os = "linux"))] {
                 sysinfo_process_data(self)
             } else {
                 Err(crate::collection::error::CollectionError::Unsupported)

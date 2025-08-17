@@ -8,12 +8,15 @@ use sysinfo::{ProcessStatus, System};
 
 use super::{ProcessHarvest, process_status_str};
 use crate::collection::{Pid, error::CollectionResult, processes::UserTable};
+use crate::collection::{DataCollector};
 
 pub(crate) trait UnixProcessExt {
     fn sysinfo_process_data(
-        sys: &System, use_current_cpu_total: bool, unnormalized_cpu: bool, total_memory: u64,
-        user_table: &mut UserTable,
+        _collector: &mut DataCollector, use_current_cpu_total: bool, unnormalized_cpu: bool, total_memory: u64
     ) -> CollectionResult<Vec<ProcessHarvest>> {
+        let sys = &_collector.sys.system;
+        let user_table = &mut _collector.user_table;
+
         let mut process_vector: Vec<ProcessHarvest> = Vec::new();
         let process_hashmap = sys.processes();
         let cpu_usage = sys.global_cpu_usage() / 100.0;
@@ -69,6 +72,34 @@ pub(crate) trait UnixProcessExt {
             };
             let uid = process_val.user_id().map(|u| **u);
             let pid = process_val.pid().as_u32() as Pid;
+
+            #[cfg(target_os = "linux")]
+            use sysinfo::ThreadKind;
+            let k_thread: bool = match process_val.thread_kind() {
+                Some(thread_kind) => { match thread_kind {
+                    ThreadKind::Kernel => true,
+                    ThreadKind::Userland => false,
+                }},
+                None => false
+            };
+
+            #[cfg(feature = "gpu")]
+            let mut gpu_util: u32 = 0;
+            let mut gpu_mem: u64 = 0;
+            let mut gpu_mem_percent: f32 = 0.0;
+            if let Some(gpus) = &_collector.gpu_pids {
+                        gpus.iter().for_each(|gpu| {
+                            // add mem/util for all gpus to pid
+                            if let Some((mem, util)) = gpu.get(&(pid as u32)) {
+                                gpu_mem += mem;
+                                gpu_util += util;
+                            }
+                        });
+                        if let Some(gpu_total_mem) = &_collector.gpus_total_mem {
+                            gpu_mem_percent = (gpu_mem as f64 / *gpu_total_mem as f64 * 100.0) as f32;
+                        }
+            }
+
             process_vector.push(ProcessHarvest {
                 pid,
                 parent_pid: Self::parent_pid(process_val),
@@ -107,11 +138,13 @@ pub(crate) trait UnixProcessExt {
                     Duration::from_secs(process_val.run_time())
                 },
                 #[cfg(feature = "gpu")]
-                gpu_mem: 0,
+                gpu_mem,
                 #[cfg(feature = "gpu")]
-                gpu_mem_percent: 0.0,
+                gpu_mem_percent,
                 #[cfg(feature = "gpu")]
-                gpu_util: 0,
+                gpu_util,
+                #[cfg(target_os = "linux")]
+                k_thread
             });
         }
 
