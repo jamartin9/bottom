@@ -286,6 +286,19 @@ impl Painter {
                     .constraints([Constraint::Percentage(100)])
                     .split(terminal_size);
                 match &app_state.current_widget.widget_type {
+                    BasicCpu => {
+                        let vertical_chunks = Layout::default()
+                            .direction(Direction::Vertical)
+                            .margin(0)
+                            .constraints([Constraint::Length(self.basic_cpu_height(app_state))])
+                            .split(rect[0]);
+                        self.draw_basic_cpu(
+                            f,
+                            app_state,
+                            vertical_chunks[0],
+                            app_state.current_widget.widget_id,
+                        )
+                    }
                     Cpu => self.draw_cpu(f, app_state, rect[0], app_state.current_widget.widget_id),
                     CpuLegend => self.draw_cpu(
                         f,
@@ -343,20 +356,6 @@ impl Painter {
                 }
 
                 let data = app_state.data_store.get_data();
-                let actual_cpu_data_len = data.cpu_harvest.len();
-
-                // This fixes #397, apparently if the height is 1, it can't render the CPU
-                // bars...
-                let cpu_height = {
-                    let c = (actual_cpu_data_len / 4) as u16
-                        + u16::from(actual_cpu_data_len % 4 != 0)
-                        + u16::from(
-                            app_state.app_config_fields.dedicated_average_row
-                                && actual_cpu_data_len.saturating_sub(1) % 4 != 0,
-                        );
-
-                    if c <= 1 { 1 } else { c }
-                };
 
                 let mut mem_rows = 1;
 
@@ -391,7 +390,7 @@ impl Painter {
                     .direction(Direction::Vertical)
                     .margin(0)
                     .constraints([
-                        Constraint::Length(cpu_height),
+                        Constraint::Length(self.basic_cpu_height(app_state)),
                         Constraint::Length(mem_rows),
                         Constraint::Length(2),
                         Constraint::Min(5),
@@ -700,6 +699,21 @@ impl Painter {
         Ok(())
     }
 
+    fn basic_cpu_height(&self, app_state: &mut App) -> u16 {
+        let data = app_state.data_store.get_data();
+        // This fixes #397, apparently if the height is 1, it can't render the CPU bars...
+        let actual_cpu_data_len = data.cpu_harvest.len();
+        {
+            let c = (actual_cpu_data_len / 4) as u16
+                + u16::from(actual_cpu_data_len % 4 != 0)
+                + u16::from(
+                    app_state.app_config_fields.dedicated_average_row
+                        && actual_cpu_data_len.saturating_sub(1) % 4 != 0,
+                );
+            if c <= 1 { 1 } else { c }
+        }
+    }
+
     fn draw_widgets_with_constraints(
         &self, f: &mut Frame<'_>, app_state: &mut App, widgets: &BottomColRow,
         widget_draw_locs: &[Rect],
@@ -708,6 +722,14 @@ impl Painter {
         for (widget, draw_loc) in widgets.children.iter().zip(widget_draw_locs) {
             if draw_loc.width >= 2 && draw_loc.height >= 2 {
                 match &widget.widget_type {
+                    BasicCpu => {
+                        let vertical_chunks = Layout::default()
+                            .direction(Direction::Vertical)
+                            .margin(0)
+                            .constraints([Constraint::Length(self.basic_cpu_height(app_state))])
+                            .split(*draw_loc);
+                        self.draw_basic_cpu(f, app_state, vertical_chunks[0], widget.widget_id)
+                    }
                     Cpu => self.draw_cpu(f, app_state, *draw_loc, widget.widget_id),
                     Mem => self.draw_memory_graph(f, app_state, *draw_loc, widget.widget_id),
                     Net => self.draw_network(f, app_state, *draw_loc, widget.widget_id),

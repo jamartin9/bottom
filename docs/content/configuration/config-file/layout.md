@@ -41,6 +41,7 @@ The following `type` values are supported:
 
 |                                  |                          |
 | -------------------------------- | ------------------------ |
+| `"basiccpu"`                     | Basic CPU meter          |
 | `"cpu"`                          | CPU chart and legend     |
 | `"mem", "memory"`                | Memory chart             |
 | `"net", "network"`               | Network chart and legend |

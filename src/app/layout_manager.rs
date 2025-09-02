@@ -976,6 +976,7 @@ impl std::str::FromStr for BottomWidgetType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let lower_case = s.to_lowercase();
         match lower_case.as_str() {
+            "basiccpu" => Ok(BottomWidgetType::BasicCpu),
             "cpu" => Ok(BottomWidgetType::Cpu),
             "mem" | "memory" => Ok(BottomWidgetType::Mem),
             "net" | "network" => Ok(BottomWidgetType::Net),

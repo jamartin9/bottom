@@ -524,7 +524,7 @@ pub(crate) const CONFIG_TEXT: &str = r#"# This is a default config file for bott
 # [[row.child]] represents either a widget or a column.
 # [[row.child.child]] represents a widget.
 #
-# All widgets must have the type value set to one of ["cpu", "mem", "proc", "net", "temp", "disk", "empty"].
+# All widgets must have the type value set to one of ["basiccpu", "cpu", "mem", "proc", "net", "temp", "disk", "empty"].
 # All layout components have a ratio value - if this is not set, then it defaults to 1.
 # The default widget layout:
 #[[row]]
