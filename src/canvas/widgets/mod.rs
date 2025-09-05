@@ -1,5 +1,6 @@
 pub mod cpu_basic;
 pub mod cpu_graph;
+pub mod cpu_bar;
 pub mod disk_table;
 pub mod mem_basic;
 pub mod mem_graph;

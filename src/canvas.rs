@@ -287,15 +287,15 @@ impl Painter {
                     .split(terminal_size);
                 match &app_state.current_widget.widget_type {
                     BasicCpu => {
-                        let vertical_chunks = Layout::default()
+                        /*let vertical_chunks = Layout::default()
                             .direction(Direction::Vertical)
                             .margin(0)
                             .constraints([Constraint::Length(self.basic_cpu_height(app_state))])
-                            .split(rect[0]);
-                        self.draw_basic_cpu(
+                            .split(rect[0]);*/
+                        self.draw_bar_cpu(
                             f,
                             app_state,
-                            vertical_chunks[0],
+                            rect[0],
                             app_state.current_widget.widget_id,
                         )
                     }

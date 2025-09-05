@@ -101,6 +101,7 @@ impl Painter {
 
             let num_entries = cpu_data.len();
             let mut row_counter = num_entries;
+
             for (itx, column) in columns.iter().enumerate() {
                 if REQUIRED_COLUMNS > itx {
                     let to_divide = REQUIRED_COLUMNS - itx;
@@ -144,7 +145,7 @@ impl Painter {
     }
 
     #[inline]
-    fn cpu_info(&self, data: &CpuData) -> (String, String, f32, tui::style::Style) {
+    pub fn cpu_info(&self, data: &CpuData) -> (String, String, f32, tui::style::Style) {
         let (outer, style) = match data.data_type {
             CpuDataType::Avg => ("AVG".to_string(), self.styles.avg_cpu_colour),
             CpuDataType::Cpu(index) => (
