@@ -317,9 +317,9 @@ impl DataStore {
 
     /// Return a reference to the currently available data. Note that if the data is
     /// in a frozen state, it will return the snapshot of data from when it was frozen.
-    pub fn get_data(&self) -> &StoredData {
-        match &self.frozen_state {
-            FrozenState::NotFrozen => &self.main,
+    pub fn get_data(&mut self) -> &mut StoredData {
+        match &mut self.frozen_state {
+            FrozenState::NotFrozen => &mut self.main,
             FrozenState::Frozen(collected_data) => collected_data,
         }
     }

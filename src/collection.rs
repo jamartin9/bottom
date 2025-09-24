@@ -185,7 +185,7 @@ pub struct DataCollector {
     #[cfg(feature = "gpu")]
     gpus_total_mem: Option<u64>,
     #[cfg(feature = "zfs")]
-    free_arc_mem: bool,
+    pub free_arc_mem: bool,
 }
 
 const LESS_ROUTINE_TASK_TIME: Duration = Duration::from_secs(60);
@@ -269,11 +269,6 @@ impl DataCollector {
 
     pub fn set_get_process_threads(&mut self, get_process_threads: bool) {
         self.get_process_threads = get_process_threads;
-    }
-
-    #[cfg(feature = "zfs")]
-    pub fn set_free_arc_mem(&mut self, free_mem: bool) {
-        self.free_arc_mem = free_mem;
     }
 
     /// Refresh sysinfo data. We use sysinfo for the following data:

@@ -3,6 +3,7 @@ pub mod filter;
 pub mod layout_manager;
 pub mod states;
 
+use std::sync::mpsc::Sender;
 use std::time::Instant;
 
 use concat_string::concat_string;
@@ -18,6 +19,7 @@ use crate::{
         components::time_graph::LegendPosition, dialogs::process_kill_dialog::ProcessKillDialog,
     },
     constants,
+    event::CollectionThreadEvent,
     utils::data_units::DataUnit,
     widgets::{ProcWidgetColumn, ProcWidgetMode, TreeCollapsed},
 };
@@ -893,7 +895,7 @@ impl App {
         }
     }
 
-    pub fn on_char_key(&mut self, caught_char: char) {
+    pub fn on_char_key(&mut self, caught_char: char, reset_sender: &Sender<CollectionThreadEvent>) {
         // Skip control code chars
         if caught_char.is_control() {
             return;
@@ -948,7 +950,7 @@ impl App {
                     }
                 }
             }
-            self.handle_char(caught_char);
+            self.handle_char(caught_char, reset_sender);
         } else if self.help_dialog_state.is_showing_help {
             match caught_char {
                 '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
@@ -962,7 +964,7 @@ impl App {
                         }
                     }
                 }
-                'j' | 'k' | 'g' | 'G' => self.handle_char(caught_char),
+                'j' | 'k' | 'g' | 'G' => self.handle_char(caught_char, reset_sender),
                 _ => {}
             }
         } else if self.process_kill_dialog.is_open() {
@@ -1014,7 +1016,7 @@ impl App {
     }
 
     // FIXME: Refactor this system...
-    fn handle_char(&mut self, caught_char: char) {
+    fn handle_char(&mut self, caught_char: char, _reset_sender: &Sender<CollectionThreadEvent>) {
         match caught_char {
             '/' => {
                 self.on_slash();
@@ -1245,6 +1247,25 @@ impl App {
                         .get_mut(&self.current_widget.widget_id)
                     {
                         proc_widget_state.toggle_k_thread();
+                    }
+                }
+                #[cfg(feature = "zfs")]
+                if let BottomWidgetType::Mem = self.current_widget.widget_type {
+                    if let Some(_mem_widget_state) = self
+                        .states
+                        .mem_state
+                        .widget_states
+                        .get_mut(&self.current_widget.widget_id)
+                    {
+                        let _ = _reset_sender.send(CollectionThreadEvent::ArcToggle).is_ok();
+                        let data = self.data_store.get_data();
+                        let _ = data
+                            .timeseries_data
+                            .ram
+                            .prune_and_shrink_to_fit(
+                                data.timeseries_data.ram.length().saturating_sub(1),
+                            )
+                            .ok();
                     }
                 }
             }

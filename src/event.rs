@@ -25,6 +25,8 @@ pub enum BottomEvent {
 #[derive(Debug)]
 pub enum CollectionThreadEvent {
     Reset,
+    #[cfg(feature = "zfs")]
+    ArcToggle,
 }
 
 /// Handle a [`MouseEvent`].
@@ -67,7 +69,7 @@ pub fn handle_key_event_or_break(
             KeyCode::Down => app.on_down_key(),
             KeyCode::Left => app.on_left_key(),
             KeyCode::Right => app.on_right_key(),
-            KeyCode::Char(caught_char) => app.on_char_key(caught_char),
+            KeyCode::Char(caught_char) => app.on_char_key(caught_char, reset_sender),
             KeyCode::Esc => app.on_esc(),
             KeyCode::Enter => app.on_enter(),
             KeyCode::Tab => app.on_tab(),
@@ -132,7 +134,7 @@ pub fn handle_key_event_or_break(
                 KeyCode::Right => app.move_widget_selection(&WidgetDirection::Right),
                 KeyCode::Up => app.move_widget_selection(&WidgetDirection::Up),
                 KeyCode::Down => app.move_widget_selection(&WidgetDirection::Down),
-                KeyCode::Char(caught_char) => app.on_char_key(caught_char),
+                KeyCode::Char(caught_char) => app.on_char_key(caught_char, reset_sender),
                 _ => {}
             }
         }

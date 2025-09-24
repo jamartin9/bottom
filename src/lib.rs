@@ -240,7 +240,9 @@ fn create_collection_thread(
         data_collector.set_show_average_cpu(show_average_cpu);
         data_collector.set_get_process_threads(get_process_threads);
         #[cfg(feature = "zfs")]
-        data_collector.set_free_arc_mem(get_arc_free);
+        {
+            data_collector.free_arc_mem = get_arc_free;
+        }
 
         data_collector.update_data();
         data_collector.data = Data::default();
@@ -261,6 +263,10 @@ fn create_collection_thread(
                 match message {
                     CollectionThreadEvent::Reset => {
                         data_collector.data.cleanup();
+                    }
+                    #[cfg(feature = "zfs")]
+                    CollectionThreadEvent::ArcToggle => {
+                        data_collector.free_arc_mem = !data_collector.free_arc_mem;
                     }
                 }
             }

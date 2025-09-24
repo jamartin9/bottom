@@ -65,6 +65,7 @@ impl Painter {
             );
             let graph_data = {
                 let mut size = 1;
+
                 let data = app_state.data_store.get_data();
 
                 // TODO: is this optimization really needed...? This just pre-allocates a vec, but it'll probably never
@@ -88,12 +89,17 @@ impl Painter {
                 let timeseries = &data.timeseries_data;
                 let time = &timeseries.time;
 
+                let mut mem_index = timeseries.ram.length().saturating_sub(1);
+                if mem_index > timeseries.time.len().saturating_sub(1) {
+                    mem_index = timeseries.time.len().saturating_sub(1);
+                }
+
                 // TODO: Add a "no data" option here/to time graph if there is no entries
                 graph_data(
                     &mut points,
                     "RAM",
                     data.ram_harvest.as_ref(),
-                    time,
+                    &time[..mem_index],
                     &timeseries.ram,
                     self.styles.ram_style,
                 );
