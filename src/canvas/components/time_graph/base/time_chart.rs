@@ -14,10 +14,11 @@ use canvas::*;
 use tui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Flex, Layout, Rect},
+    prelude::BlockExt,
     style::{Color, Style, Styled},
     symbols::{self, Marker},
     text::{Line, Span},
-    widgets::{Block, Borders, GraphType, Widget, block::BlockExt},
+    widgets::{Block, Borders, GraphType, Widget, WidgetRef},
 };
 use unicode_width::UnicodeWidthStr;
 
@@ -771,8 +772,8 @@ impl<'a> TimeChart<'a> {
 impl Widget for TimeChart<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         buf.set_style(area, self.style);
+        self.block.as_ref().render_ref(area, buf);
 
-        self.block.render(area, buf);
         let chart_area = self.block.inner_if_some(area);
         if chart_area.is_empty() {
             return;
