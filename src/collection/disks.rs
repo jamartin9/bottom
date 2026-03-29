@@ -8,10 +8,10 @@ cfg_if! {
         #[cfg(feature = "zfs")]
         mod zfs_io_counters;
         #[cfg(feature = "zfs")]
+        mod unix;
+        #[cfg(feature = "zfs")]
         pub use io_counters::IoCounters;
         pub(crate) use self::freebsd::*;
-        mod other;
-        pub(crate) use self::other::*;
     } else if #[cfg(target_os = "windows")] {
         mod windows;
         pub(crate) use self::windows::*;

@@ -16,17 +16,18 @@ cfg_if::cfg_if! {
         mod macos;
         pub use macos::*;
     } else {
-        mod other;
+        pub mod other;
         use other::*;
     }
 }
 
-use file_systems::*;
+pub(crate) use file_systems::*;
 use usage::*;
 
 use super::{DiskHarvest, keep_disk_entry};
 use crate::collection::DataCollector;
 
+#[cfg_attr(target_os = "freebsd", expect(dead_code))]
 /// Returns the disk usage of the mounted (and for now, physical) disks.
 pub fn get_disk_usage(collector: &DataCollector) -> anyhow::Result<Vec<DiskHarvest>> {
     let disk_filter = &collector.filters.disk_filter;
